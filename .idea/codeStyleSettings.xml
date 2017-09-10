@@ -11,6 +11,8 @@
           <option name="CALL_PARAMETERS_WRAP" value="5" />
           <option name="CALL_PARAMETERS_LPAREN_ON_NEXT_LINE" value="true" />
           <option name="CALL_PARAMETERS_RPAREN_ON_NEXT_LINE" value="true" />
+          <option name="METHOD_PARAMETERS_LPAREN_ON_NEXT_LINE" value="true" />
+          <option name="METHOD_PARAMETERS_RPAREN_ON_NEXT_LINE" value="true" />
           <option name="METHOD_CALL_CHAIN_WRAP" value="5" />
           <option name="WRAP_FIRST_METHOD_IN_CALL_CHAIN" value="true" />
           <option name="BINARY_OPERATION_WRAP" value="5" />
@@ -20,7 +22,6 @@
           <option name="DOWHILE_BRACE_FORCE" value="3" />
           <option name="WHILE_BRACE_FORCE" value="3" />
           <option name="FOR_BRACE_FORCE" value="3" />
-          <option name="WRAP_LONG_LINES" value="true" />
           <option name="WRAP_ON_TYPING" value="0" />
           <indentOptions>
             <option name="CONTINUATION_INDENT_SIZE" value="4" />
