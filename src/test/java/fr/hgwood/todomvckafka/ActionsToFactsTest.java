@@ -73,13 +73,13 @@ public class ActionsToFactsTest {
             .toList();
 
         assertTrue(
-            "all facts not about the same entity",
+            "expected one entity to be created but there was multiple",
             facts.forAll(fact -> fact
                 .getEntity()
                 .equals(facts.get(0).getEntity()))
         );
         assertTrue(
-            "no fact about text of add action",
+            "expected one fact setting the text of the new todo but there was none",
             facts.existsUnique(fact -> fact.getAttribute().equals("text")
                 && fact.getValue().equals(inputAction.getText()))
         );
