@@ -3,6 +3,7 @@ package fr.hgwood.todomvckafka;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.hgwood.todomvckafka.support.json.JsonSerde;
 import io.vavr.collection.List;
+import io.vavr.jackson.datatype.VavrModule;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
@@ -19,7 +20,8 @@ import static org.apache.kafka.streams.StreamsConfig.*;
 public class ActionsToFacts {
     public static final String ACTIONS_TOPIC = "actions";
     public static final String FACTS_TOPIC = "facts";
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER =
+        new ObjectMapper().registerModule(new VavrModule());
     public static final JsonSerde<Action> ACTION_SERDE =
         new JsonSerde<>(OBJECT_MAPPER, Action.class);
     public static final JsonSerde<Fact> FACT_SERDE =
@@ -54,19 +56,27 @@ public class ActionsToFacts {
         );
         config.put(AUTO_OFFSET_RESET_CONFIG, "earliest");
 
-        ObjectMapper objectMapper = new ObjectMapper();
-
         KStreamBuilder builder = new KStreamBuilder();
 
         builder
             .stream(Serdes.String(), ACTION_SERDE, ACTIONS_TOPIC)
             .flatMap((key, action) -> {
-                String entity = randomUUID().toString();
-                return List.of(KeyValue.pair(randomUUID().toString(),
-                    Fact.of(entity, TODO_ITEM_TEXT, action.getText())
-                ), KeyValue.pair(randomUUID().toString(),
-                    Fact.of(entity, TODO_ITEM_COMPLETED, false)
-                ));
+                if (action.getType()
+                    == ActionType.ADD_TODO) {
+                    String entity = randomUUID().toString();
+                    return List.of(KeyValue.pair(randomUUID().toString(),
+                        Fact.of(entity, TODO_ITEM_TEXT, action.getText())
+                    ), KeyValue.pair(randomUUID().toString(),
+                        Fact.of(entity, TODO_ITEM_COMPLETED, false)
+                    ));
+                } else if (action.getType()
+                    == ActionType.DELETE_TODO) {
+                    return List.of(KeyValue.pair(randomUUID().toString(),
+                        Fact.retractEntity(action.getId())
+                    ));
+                } else {
+                    return List.of();
+                }
             })
             .to(Serdes.String(), FACT_SERDE, FACTS_TOPIC);
 
