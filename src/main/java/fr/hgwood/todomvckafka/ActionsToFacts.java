@@ -10,6 +10,8 @@ import org.apache.kafka.streams.kstream.KStreamBuilder;
 
 import java.util.Properties;
 
+import static fr.hgwood.todomvckafka.schema.Attribute.TODO_ITEM_COMPLETED;
+import static fr.hgwood.todomvckafka.schema.Attribute.TODO_ITEM_TEXT;
 import static java.util.UUID.randomUUID;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_OFFSET_RESET_CONFIG;
 import static org.apache.kafka.streams.StreamsConfig.*;
@@ -18,10 +20,10 @@ public class ActionsToFacts {
     public static final String ACTIONS_TOPIC = "actions";
     public static final String FACTS_TOPIC = "facts";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    public static final JsonSerde<Action> ACTION_SERDE = new JsonSerde<>(
-        OBJECT_MAPPER, Action.class);
-    public static final JsonSerde<Fact> FACT_SERDE = new JsonSerde<>(
-        OBJECT_MAPPER, Fact.class);
+    public static final JsonSerde<Action> ACTION_SERDE =
+        new JsonSerde<>(OBJECT_MAPPER, Action.class);
+    public static final JsonSerde<Fact> FACT_SERDE =
+        new JsonSerde<>(OBJECT_MAPPER, Fact.class);
 
     public static void main(String[] args) {
         KafkaStreams streams = actionsToFacts(System.getProperty(
@@ -57,32 +59,16 @@ public class ActionsToFacts {
         KStreamBuilder builder = new KStreamBuilder();
 
         builder
-            .stream(Serdes.String(),
-                ACTION_SERDE,
-                ACTIONS_TOPIC
-            )
+            .stream(Serdes.String(), ACTION_SERDE, ACTIONS_TOPIC)
             .flatMap((key, action) -> {
                 String entity = randomUUID().toString();
                 return List.of(KeyValue.pair(randomUUID().toString(),
-                    Fact
-                        .builder()
-                        .entity(entity)
-                        .attribute("text")
-                        .value(action.getText())
-                        .build()
+                    Fact.of(entity, TODO_ITEM_TEXT, action.getText())
                 ), KeyValue.pair(randomUUID().toString(),
-                    Fact
-                        .builder()
-                        .entity(entity)
-                        .attribute("completed")
-                        .value(false)
-                        .build()
+                    Fact.of(entity, TODO_ITEM_COMPLETED, false)
                 ));
             })
-            .to(Serdes.String(),
-                FACT_SERDE,
-                FACTS_TOPIC
-            );
+            .to(Serdes.String(), FACT_SERDE, FACTS_TOPIC);
 
         return new KafkaStreams(builder, config);
     }

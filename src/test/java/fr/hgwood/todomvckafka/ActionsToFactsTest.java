@@ -1,5 +1,6 @@
 package fr.hgwood.todomvckafka;
 
+import fr.hgwood.todomvckafka.schema.Attribute;
 import io.vavr.collection.List;
 import io.vavr.collection.Stream;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -15,6 +16,7 @@ import org.springframework.kafka.test.rule.KafkaEmbedded;
 import java.util.Map;
 
 import static fr.hgwood.todomvckafka.ActionsToFacts.*;
+import static fr.hgwood.todomvckafka.schema.Attribute.TODO_ITEM_TEXT;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_OFFSET_RESET_CONFIG;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
@@ -80,11 +82,12 @@ public class ActionsToFactsTest {
         );
         assertTrue(
             "expected one fact setting the text of the new todo but there was none",
-            facts.existsUnique(fact -> fact.getAttribute().equals("text")
+            facts.existsUnique(fact -> fact.getAttribute().equals(TODO_ITEM_TEXT)
                 && fact.getValue().equals(inputAction.getText()))
         );
 
         consumer.close();
         streams.close();
     }
+
 }
