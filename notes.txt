@@ -1,0 +1,17 @@
+- facts should be union of assertion and retraction
+- how to retract an entity
+  - keep map of entity to attribute list and generate retraction for each attribute
+  - retraction with no attribute
+- should not use facts ?
+  - facts are the same as partial updates
+    - no read before write, but complex building of current state (object merging)
+    - cannot statically typed because of all the possible partial update combinations
+  - alternative to facts is full updates
+    - some actions like editTodo or completeTodo require to read the todo to get the other attribute and form a full update
+    - current state is easy to build: just take the most recent message
+    - easier to statically type
+- completeAll and clearCompleted are macro-actions: they generate multiple actions
+- completeAll and clearCompleted require reading existing data to be interpreted
+- current implementation of Action is not scalable because needs all possible fields
+  - Action could be enum with toFacts method ? Not coupling because only existing for the Action to Facts processor
+- current tests use one broker by tests; could use one broker for the suite if tests passed new application id to code and used new consumer groups for each test
