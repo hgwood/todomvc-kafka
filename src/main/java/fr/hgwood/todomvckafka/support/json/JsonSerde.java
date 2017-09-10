@@ -1,5 +1,6 @@
 package fr.hgwood.todomvckafka.support.json;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serializer;
@@ -23,6 +24,13 @@ public class JsonSerde<T> implements Serde<T> {
         requireNonNull(jsonDeserializer, "'jsonDeserializer' must not be null.");
         this.jsonSerializer = jsonSerializer;
         this.jsonDeserializer = jsonDeserializer;
+    }
+
+    public JsonSerde(ObjectMapper objectMapper, Class<T> targetType) {
+        this(
+            new JsonSerializer<>(objectMapper),
+            new JsonDeserializer<>(objectMapper, targetType)
+        );
     }
 
     @Override

@@ -15,7 +15,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
-public class AppTest {
+public class TestHarnessTest {
 
     private static final String TEMPLATE_TOPIC = "template-topic";
 
