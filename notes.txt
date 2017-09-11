@@ -14,5 +14,8 @@
 - completeAll and clearCompleted require reading existing data to be interpreted
 - current implementation of Action is not scalable because needs all possible fields
   - Action could be enum with toFacts method ? Not coupling because only existing for the Action to Facts processor
-- current tests use one broker by tests; could use one broker for the suite if tests passed new application id to code and used new consumer groups for each test
+- current tests use one broker by tests; could use one broker for the suite if tests passed new topics, new application id to code and used new consumer groups for each test
 - don't forget error handling (put messages that raise errors into specific topics)
+- ActionsToFacts could be tested without a streams : it's just a Action -> [Fact] function
+- aggregation seem slow to test (FactsToDataTest.singleAssertion takes 40s to run) and I don't see how to test them outside of Streams
+- there seems to be quite a lot of timing issue with streams integration tests

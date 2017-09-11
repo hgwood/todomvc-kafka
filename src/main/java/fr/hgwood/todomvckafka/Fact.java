@@ -37,7 +37,7 @@ public class Fact {
             throw new IllegalArgumentException(format(
                 "value '%s' is not compatible with the type of attribute '%s'",
                 value,
-                attribute.getName()
+                attribute.getFullName()
             ));
         }
     }
