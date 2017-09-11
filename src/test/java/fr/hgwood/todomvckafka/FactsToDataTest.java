@@ -26,8 +26,10 @@ import static org.springframework.kafka.test.utils.KafkaTestUtils.producerProps;
 
 public class FactsToDataTest {
     private static final String applicationId = randomUUID().toString();
-    private static final String intermediateTopic = applicationId + "-" + "todo-items-aggregation-store";
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().registerModule(new VavrModule());
+    private static final String intermediateTopic = applicationId
+        + "-todo-items-aggregation-store";
+    private static final ObjectMapper OBJECT_MAPPER =
+        new ObjectMapper().registerModule(new VavrModule());
     private static final String FACTS_TOPIC = "test-facts-topic";
     private static final Serde<String> stringSerde = Serdes.String();
     private static final Serde<Fact> factSerde =
@@ -37,8 +39,13 @@ public class FactsToDataTest {
         new JsonSerde<>(OBJECT_MAPPER, TodoItem.class);
 
     @Rule
-    public KafkaEmbedded embeddedKafka =
-        new KafkaEmbedded(1, true, 1, FACTS_TOPIC, TODO_ITEMS_TOPIC, intermediateTopic);
+    public KafkaEmbedded embeddedKafka = new KafkaEmbedded(1,
+        true,
+        1,
+        FACTS_TOPIC,
+        TODO_ITEMS_TOPIC,
+        intermediateTopic
+    );
 
 
     @Test

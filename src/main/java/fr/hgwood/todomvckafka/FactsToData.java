@@ -1,7 +1,6 @@
 package fr.hgwood.todomvckafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fr.hgwood.todomvckafka.schema.Attribute;
 import fr.hgwood.todomvckafka.support.json.JsonSerde;
 import io.vavr.collection.HashMap;
 import org.apache.kafka.common.serialization.Serde;
@@ -37,19 +36,22 @@ public class FactsToData {
 
         builder
             .stream(factKeySerde, factSerde, factsTopic)
-            .groupBy((factKey, fact) ->
-                fact.getEntity(), Serdes.String(), factSerde)
+            .groupBy((factKey, fact) -> fact.getEntity(),
+                Serdes.String(),
+                factSerde
+            )
             .aggregate(() -> HashMap.<String, Object>empty(),
-                (entityKey, fact, entity) ->
-                    entity.put(
-                    fact.getAttribute().get().getName(),
-                    fact.getValue().get()
-                ),
+                (entityKey, fact, entity) -> entity.put(fact
+                    .getAttribute()
+                    .get()
+                    .getName(), fact.getValue().get()),
                 new JsonSerde<>(objectMapper, HashMap.class),
                 "todo-items-aggregation-store"
             )
-            .mapValues(value ->
-                objectMapper.convertValue(value, TodoItem.class))
+            .mapValues(value -> objectMapper.convertValue(
+                value,
+                TodoItem.class
+            ))
             .to(todoItemKeySerde, todoItemSerde, todoItemsTopic);
 
         return new KafkaStreams(builder, config);

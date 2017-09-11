@@ -18,4 +18,5 @@
 - don't forget error handling (put messages that raise errors into specific topics)
 - ActionsToFacts could be tested without a streams : it's just a Action -> [Fact] function
 - aggregation seem slow to test (FactsToDataTest.singleAssertion takes 40s to run) and I don't see how to test them outside of Streams
-- there seems to be quite a lot of timing issue with streams integration tests
+  - there seems to be quite a lot of timing issue with streams integration tests
+  - SOLUTION: unit testing topologies!! https://github.com/apache/kafka/blob/0.11.0.0/streams/src/test/java/org/apache/kafka/test/ProcessorTopologyTestDriver.java
