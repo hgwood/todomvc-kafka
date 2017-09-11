@@ -15,3 +15,4 @@
 - current implementation of Action is not scalable because needs all possible fields
   - Action could be enum with toFacts method ? Not coupling because only existing for the Action to Facts processor
 - current tests use one broker by tests; could use one broker for the suite if tests passed new application id to code and used new consumer groups for each test
+- don't forget error handling (put messages that raise errors into specific topics)
