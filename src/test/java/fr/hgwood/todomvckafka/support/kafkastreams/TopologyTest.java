@@ -28,7 +28,7 @@ public class TopologyTest implements AutoCloseable {
             new ProcessorTopologyTestDriver(new StreamsConfig(config), builder);
     }
 
-    public <K, V> void write(
+    public <K, V> TopologyTest write(
         TopicInfo<K, V> topicInfo, KeyValue<K, V> payload
     ) {
         this.testDriver.process(
@@ -38,6 +38,7 @@ public class TopologyTest implements AutoCloseable {
             topicInfo.getKeySerde().serializer(),
             topicInfo.getValueSerde().serializer()
         );
+        return this;
     }
 
     public <K, V> KeyValue<K, V> read(TopicInfo<K, V> todoItems) {
@@ -47,6 +48,17 @@ public class TopologyTest implements AutoCloseable {
             todoItems.getValueSerde().deserializer()
         );
         return KeyValue.pair(record.key(), record.value());
+    }
+
+    public <K, V> TopologyTest skip(TopicInfo<K, V> todoItems, int count) {
+        for (int i = 0; i < count; i++) {
+            this.testDriver.readOutput(
+                todoItems.getName(),
+                todoItems.getKeySerde().deserializer(),
+                todoItems.getValueSerde().deserializer()
+            );
+        }
+        return this;
     }
 
     public void close() {
