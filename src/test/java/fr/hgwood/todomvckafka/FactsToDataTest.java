@@ -4,12 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.hgwood.todomvckafka.schema.Attribute;
 import fr.hgwood.todomvckafka.support.json.JsonSerde;
 import fr.hgwood.todomvckafka.support.kafkastreams.TopicInfo;
+import fr.hgwood.todomvckafka.support.kafkastreams.Topology;
+import fr.hgwood.todomvckafka.support.kafkastreams.TopologyTest;
 import io.vavr.jackson.datatype.VavrModule;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
 import org.junit.Test;
 
-import static fr.hgwood.todomvckafka.support.kafkastreams.TopologyTest.topologyTest;
 import static java.util.UUID.randomUUID;
 import static org.junit.Assert.assertEquals;
 
@@ -29,28 +30,26 @@ public class FactsToDataTest {
 
     @Test
     public void singleAssertion() throws Exception {
-        topologyTest(
-            new FactsToDataTopology(FACTS, TODO_ITEMS, OBJECT_MAPPER),
-            topology -> {
-                String expectedEntity = "test-entity-id";
-                String expectedText = "test-todo-item-text-value";
-                KeyValue<String, TodoItem> expected = KeyValue.pair(
-                    expectedEntity,
-                    new TodoItem(expectedText, null)
+        Topology topology =
+            new FactsToDataTopology(FACTS, TODO_ITEMS, OBJECT_MAPPER);
+
+        try (TopologyTest topologyTest = new TopologyTest(topology)) {
+            String expectedEntity = "test-entity-id";
+            String expectedText = "test-todo-item-text-value";
+            KeyValue<String, TodoItem> expected =
+                KeyValue.pair(expectedEntity, new TodoItem(expectedText, null));
+
+            KeyValue<String, Fact> input =
+                KeyValue.pair(randomUUID().toString(),
+                    Fact.of(expectedEntity,
+                        Attribute.TODO_ITEM_TEXT,
+                        expectedText
+                    )
                 );
+            topologyTest.write(FACTS, input);
+            KeyValue<String, TodoItem> actual = topologyTest.read(TODO_ITEMS);
 
-                KeyValue<String, Fact> input =
-                    KeyValue.pair(randomUUID().toString(),
-                        Fact.of(expectedEntity,
-                            Attribute.TODO_ITEM_TEXT,
-                            expectedText
-                        )
-                    );
-                topology.write(FACTS, input);
-                KeyValue<String, TodoItem> actual = topology.read(TODO_ITEMS);
-
-                assertEquals(expected, actual);
-            }
-        );
+            assertEquals(expected, actual);
+        }
     }
 }

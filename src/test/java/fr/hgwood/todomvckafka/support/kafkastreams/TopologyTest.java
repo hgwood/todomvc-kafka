@@ -7,17 +7,16 @@ import org.apache.kafka.streams.kstream.KStreamBuilder;
 import org.apache.kafka.test.ProcessorTopologyTestDriver;
 
 import java.util.Properties;
-import java.util.function.Consumer;
 
 import static java.util.UUID.randomUUID;
 import static org.apache.kafka.streams.StreamsConfig.APPLICATION_ID_CONFIG;
 import static org.apache.kafka.streams.StreamsConfig.BOOTSTRAP_SERVERS_CONFIG;
 
-public class TopologyTest {
+public class TopologyTest implements AutoCloseable {
 
     private final ProcessorTopologyTestDriver testDriver;
 
-    private TopologyTest(Topology topology) {
+    public TopologyTest(Topology topology) {
         KStreamBuilder builder = new KStreamBuilder();
         topology.build(builder);
 
@@ -27,14 +26,6 @@ public class TopologyTest {
 
         this.testDriver =
             new ProcessorTopologyTestDriver(new StreamsConfig(config), builder);
-    }
-
-    public static void topologyTest(
-        Topology topology, Consumer<TopologyTest> test
-    ) {
-        TopologyTest topologyTest = new TopologyTest(topology);
-        test.accept(topologyTest);
-        topologyTest.close();
     }
 
     public <K, V> void write(
@@ -58,7 +49,7 @@ public class TopologyTest {
         return KeyValue.pair(record.key(), record.value());
     }
 
-    private void close() {
+    public void close() {
         this.testDriver.close();
     }
 }
