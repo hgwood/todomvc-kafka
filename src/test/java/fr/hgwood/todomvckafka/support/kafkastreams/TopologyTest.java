@@ -1,0 +1,55 @@
+package fr.hgwood.todomvckafka.support.kafkastreams;
+
+import fr.hgwood.todomvckafka.support.kafkastreams.Topology;
+import fr.hgwood.todomvckafka.support.kafkastreams.TopicInfo;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.streams.KeyValue;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.kstream.KStreamBuilder;
+import org.apache.kafka.test.ProcessorTopologyTestDriver;
+
+import java.util.Properties;
+
+import static java.util.UUID.randomUUID;
+import static org.apache.kafka.streams.StreamsConfig.APPLICATION_ID_CONFIG;
+import static org.apache.kafka.streams.StreamsConfig.BOOTSTRAP_SERVERS_CONFIG;
+
+public class TopologyTest {
+    private final ProcessorTopologyTestDriver testDriver;
+
+    public TopologyTest(Topology topology) {
+        KStreamBuilder builder = new KStreamBuilder();
+        topology.build(builder);
+
+        Properties config = new Properties();
+        config.put(APPLICATION_ID_CONFIG, randomUUID().toString());
+        config.put(BOOTSTRAP_SERVERS_CONFIG, "localhost");
+
+        this.testDriver =
+            new ProcessorTopologyTestDriver(new StreamsConfig(config), builder);
+    }
+
+    public <K, V> void write(
+        TopicInfo<K, V> topicInfo, KeyValue<K, V> payload
+    ) {
+        this.testDriver.process(topicInfo.getName(),
+            payload.key,
+            payload.value,
+            topicInfo.getKeySerde().serializer(),
+            topicInfo.getValueSerde().serializer()
+        );
+    }
+
+    public <K, V> KeyValue<K, V> read(TopicInfo<K, V> todoItems) {
+        ProducerRecord<K, V> record =
+            this.testDriver.readOutput(todoItems.getName(),
+                todoItems.getKeySerde().deserializer(),
+                todoItems.getValueSerde().deserializer()
+            );
+        return KeyValue.pair(record.key(), record.value());
+    }
+
+    public void close() {
+        this.testDriver.close();
+    }
+}
