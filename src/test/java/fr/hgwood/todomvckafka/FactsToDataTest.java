@@ -17,8 +17,7 @@ import static org.junit.Assert.assertEquals;
 public class FactsToDataTest {
     private static final ObjectMapper OBJECT_MAPPER =
         new ObjectMapper().registerModule(new VavrModule());
-    private static final TopicInfo<String, Fact> FACTS = new TopicInfo(
-        "test-facts-topic",
+    private static final TopicInfo<String, Fact> FACTS = new TopicInfo("test-facts-topic",
         Serdes.String(),
         new JsonSerde(OBJECT_MAPPER, Fact.class)
     );
@@ -30,8 +29,7 @@ public class FactsToDataTest {
 
     @Test
     public void singleAssertion() throws Exception {
-        Topology topology =
-            new FactsToDataTopology(FACTS, TODO_ITEMS, OBJECT_MAPPER);
+        Topology topology = new FactsToDataTopology(FACTS, TODO_ITEMS, OBJECT_MAPPER);
 
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
             String expectedEntity = "test-entity-id";
@@ -39,13 +37,9 @@ public class FactsToDataTest {
             KeyValue<String, TodoItem> expected =
                 KeyValue.pair(expectedEntity, new TodoItem(expectedText, null));
 
-            KeyValue<String, Fact> input =
-                KeyValue.pair(randomUUID().toString(),
-                    Fact.of(expectedEntity,
-                        Attribute.TODO_ITEM_TEXT,
-                        expectedText
-                    )
-                );
+            KeyValue<String, Fact> input = KeyValue.pair(randomUUID().toString(),
+                Fact.of(expectedEntity, Attribute.TODO_ITEM_TEXT, expectedText)
+            );
             topologyTest.write(FACTS, input);
             KeyValue<String, TodoItem> actual = topologyTest.read(TODO_ITEMS);
 
@@ -55,30 +49,21 @@ public class FactsToDataTest {
 
     @Test
     public void twoAssertion() throws Exception {
-        Topology topology =
-            new FactsToDataTopology(FACTS, TODO_ITEMS, OBJECT_MAPPER);
+        Topology topology = new FactsToDataTopology(FACTS, TODO_ITEMS, OBJECT_MAPPER);
 
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
             String expectedEntity = "test-entity-id";
             String expectedText = "test-todo-item-text-value";
             Boolean expectedCompleted = true;
-            KeyValue<String, TodoItem> expected = KeyValue.pair(
-                expectedEntity,
-                new TodoItem(expectedText, expectedCompleted)
-            );
+            KeyValue<String, TodoItem> expected =
+                KeyValue.pair(expectedEntity, new TodoItem(expectedText, expectedCompleted));
 
-            KeyValue<String, Fact> textAssertion =
-                KeyValue.pair(randomUUID().toString(),
-                    Fact.of(expectedEntity,
-                        Attribute.TODO_ITEM_TEXT,
-                        expectedText
-                    )
-                );
-            KeyValue<String, Fact> completedAssertion =
-                KeyValue.pair(randomUUID().toString(), Fact.of(expectedEntity,
-                    Attribute.TODO_ITEM_COMPLETED,
-                    expectedCompleted
-                ));
+            KeyValue<String, Fact> textAssertion = KeyValue.pair(randomUUID().toString(),
+                Fact.of(expectedEntity, Attribute.TODO_ITEM_TEXT, expectedText)
+            );
+            KeyValue<String, Fact> completedAssertion = KeyValue.pair(randomUUID().toString(),
+                Fact.of(expectedEntity, Attribute.TODO_ITEM_COMPLETED, expectedCompleted)
+            );
             KeyValue<String, TodoItem> actual = topologyTest
                 .write(FACTS, textAssertion)
                 .skip(TODO_ITEMS, 1)

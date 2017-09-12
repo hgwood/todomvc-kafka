@@ -20,24 +20,16 @@ public class FactsToDataTopology implements Topology {
     public void build(KStreamBuilder builder) {
         builder
             .stream(facts.getKeySerde(), facts.getValueSerde(), facts.getName())
-            .groupBy((factKey, fact) -> fact.getEntity(),
-                Serdes.String(),
-                facts.getValueSerde()
-            )
+            .groupBy((factKey, fact) -> fact.getEntity(), Serdes.String(), facts.getValueSerde())
             .aggregate(() -> HashMap.<String, Object>empty(),
-                (entityKey, fact, entity) -> entity.put(fact
-                    .getAttribute()
-                    .get()
-                    .getName(), fact.getValue().get()),
+                (entityKey, fact, entity) -> entity.put(
+                    fact.getAttribute().get().getName(),
+                    fact.getValue().get()
+                ),
                 new JsonSerde<>(objectMapper, HashMap.class),
                 "todo-items-aggregation-store"
             )
-            .mapValues(value -> objectMapper.convertValue(value,
-                TodoItem.class
-            ))
-            .to(todoItems.getKeySerde(),
-                todoItems.getValueSerde(),
-                todoItems.getName()
-            );
+            .mapValues(value -> objectMapper.convertValue(value, TodoItem.class))
+            .to(todoItems.getKeySerde(), todoItems.getValueSerde(), todoItems.getName());
     }
 }

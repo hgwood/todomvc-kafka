@@ -24,8 +24,7 @@ public class TopologyTest implements AutoCloseable {
         config.put(APPLICATION_ID_CONFIG, randomUUID().toString());
         config.put(BOOTSTRAP_SERVERS_CONFIG, "localhost");
 
-        this.testDriver =
-            new ProcessorTopologyTestDriver(new StreamsConfig(config), builder);
+        this.testDriver = new ProcessorTopologyTestDriver(new StreamsConfig(config), builder);
     }
 
     public <K, V> TopologyTest write(

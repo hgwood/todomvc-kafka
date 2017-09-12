@@ -27,24 +27,28 @@ public class TestHarnessTest {
 
     @Test
     public void testHarnessStarts() throws Exception {
-        Map<String, Object> producerProps =
-            KafkaTestUtils.producerProps(embeddedKafka);
-        ProducerFactory<String, String> producerFactory =
-            new DefaultKafkaProducerFactory<>(producerProps, stringSerde.serializer(), stringSerde.serializer());
+        Map<String, Object> producerProps = KafkaTestUtils.producerProps(embeddedKafka);
+        ProducerFactory<String, String> producerFactory = new DefaultKafkaProducerFactory<>(
+            producerProps,
+            stringSerde.serializer(),
+            stringSerde.serializer()
+        );
         KafkaTemplate<String, String> template = new KafkaTemplate<>(producerFactory);
 
-        Map<String, Object> consumerProps = KafkaTestUtils.consumerProps(
-            "testGroup", "true", embeddedKafka);
+        Map<String, Object> consumerProps =
+            KafkaTestUtils.consumerProps("testGroup", "true", embeddedKafka);
         consumerProps.put("auto.offset.reset", "earliest");
-        ConsumerFactory consumerFactory = new DefaultKafkaConsumerFactory(
-            consumerProps, stringSerde.deserializer(), stringSerde.deserializer());
+        ConsumerFactory consumerFactory = new DefaultKafkaConsumerFactory(consumerProps,
+            stringSerde.deserializer(),
+            stringSerde.deserializer()
+        );
         Consumer<String, String> consumer = consumerFactory.createConsumer();
         embeddedKafka.consumeFromAnEmbeddedTopic(consumer, TEMPLATE_TOPIC);
 
         template.send(TEMPLATE_TOPIC, "foo");
 
-        ConsumerRecord<String, String> reply = KafkaTestUtils.getSingleRecord(
-            consumer, TEMPLATE_TOPIC);
+        ConsumerRecord<String, String> reply =
+            KafkaTestUtils.getSingleRecord(consumer, TEMPLATE_TOPIC);
         assertEquals("foo", reply.value());
     }
 

@@ -24,14 +24,11 @@ public class ActionsToFacts {
         new ObjectMapper().registerModule(new VavrModule());
     public static final JsonSerde<Action> ACTION_SERDE =
         new JsonSerde<>(OBJECT_MAPPER, Action.class);
-    public static final JsonSerde<Fact> FACT_SERDE =
-        new JsonSerde<>(OBJECT_MAPPER, Fact.class);
+    public static final JsonSerde<Fact> FACT_SERDE = new JsonSerde<>(OBJECT_MAPPER, Fact.class);
 
     public static void main(String[] args) {
-        KafkaStreams streams = actionsToFacts(System.getProperty(
-            "bootstrap.servers",
-            "localhost:9092"
-        ));
+        KafkaStreams streams =
+            actionsToFacts(System.getProperty("bootstrap.servers", "localhost:9092"));
         if (System.getProperty("streams.cleanUp", "false").equals("true")) {
             streams.cleanUp();
         }
@@ -51,34 +48,30 @@ public class ActionsToFacts {
         config.put(APPLICATION_ID_CONFIG, "actions-to-facts");
         config.put(BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         config.put(DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
-        config.put(DEFAULT_VALUE_SERDE_CLASS_CONFIG,
-            Serdes.String().getClass()
-        );
+        config.put(DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
         config.put(AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         KStreamBuilder builder = new KStreamBuilder();
 
-        builder
-            .stream(Serdes.String(), ACTION_SERDE, ACTIONS_TOPIC)
-            .flatMap((key, action) -> {
-                if (action.getType()
-                    == ActionType.ADD_TODO) {
-                    String entity = randomUUID().toString();
-                    return List.of(KeyValue.pair(randomUUID().toString(),
+        builder.stream(Serdes.String(), ACTION_SERDE, ACTIONS_TOPIC).flatMap((key, action) -> {
+            if (action.getType() == ActionType.ADD_TODO) {
+                String entity = randomUUID().toString();
+                return List.of(
+                    KeyValue.pair(randomUUID().toString(),
                         Fact.of(entity, TODO_ITEM_TEXT, action.getText())
-                    ), KeyValue.pair(randomUUID().toString(),
+                    ),
+                    KeyValue.pair(randomUUID().toString(),
                         Fact.of(entity, TODO_ITEM_COMPLETED, false)
-                    ));
-                } else if (action.getType()
-                    == ActionType.DELETE_TODO) {
-                    return List.of(KeyValue.pair(randomUUID().toString(),
-                        Fact.retractEntity(action.getId())
-                    ));
-                } else {
-                    return List.of();
-                }
-            })
-            .to(Serdes.String(), FACT_SERDE, FACTS_TOPIC);
+                    )
+                );
+            } else if (action.getType() == ActionType.DELETE_TODO) {
+                return List.of(KeyValue.pair(randomUUID().toString(),
+                    Fact.retractEntity(action.getId())
+                ));
+            } else {
+                return List.of();
+            }
+        }).to(Serdes.String(), FACT_SERDE, FACTS_TOPIC);
 
         return new KafkaStreams(builder, config);
     }
