@@ -81,6 +81,20 @@
       <version>5.0.0.RC3</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka-streams</artifactId>
+      <version>0.11.0.0</version>
+      <classifier>test</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka-clients</artifactId>
+      <version>0.11.0.0</version>
+      <classifier>test</classifier>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <repositories>

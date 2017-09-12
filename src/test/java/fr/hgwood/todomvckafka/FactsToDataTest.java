@@ -3,31 +3,27 @@ package fr.hgwood.todomvckafka;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.hgwood.todomvckafka.schema.Attribute;
 import fr.hgwood.todomvckafka.support.json.JsonSerde;
-import io.vavr.collection.List;
-import io.vavr.collection.Stream;
+import fr.hgwood.todomvckafka.utils.kafkastreams.TopicInfo;
 import io.vavr.jackson.datatype.VavrModule;
-import org.apache.kafka.clients.consumer.Consumer;
+import kafka.security.auth.Topic;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
-import org.junit.Rule;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.kstream.KStreamBuilder;
+import org.apache.kafka.test.ProcessorTopologyTestDriver;
 import org.junit.Test;
-import org.springframework.kafka.core.*;
-import org.springframework.kafka.test.rule.KafkaEmbedded;
 
-import java.util.Map;
+import java.util.Properties;
 
 import static java.util.UUID.randomUUID;
-import static org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_OFFSET_RESET_CONFIG;
+import static org.apache.kafka.streams.StreamsConfig.APPLICATION_ID_CONFIG;
+import static org.apache.kafka.streams.StreamsConfig.BOOTSTRAP_SERVERS_CONFIG;
 import static org.junit.Assert.assertEquals;
-import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
-import static org.springframework.kafka.test.utils.KafkaTestUtils.producerProps;
 
 public class FactsToDataTest {
     private static final String applicationId = randomUUID().toString();
-    private static final String intermediateTopic = applicationId
-        + "-todo-items-aggregation-store";
     private static final ObjectMapper OBJECT_MAPPER =
         new ObjectMapper().registerModule(new VavrModule());
     private static final String FACTS_TOPIC = "test-facts-topic";
@@ -38,70 +34,47 @@ public class FactsToDataTest {
     private static final Serde<TodoItem> TODO_ITEM_SERDE =
         new JsonSerde<>(OBJECT_MAPPER, TodoItem.class);
 
-    @Rule
-    public KafkaEmbedded embeddedKafka = new KafkaEmbedded(1,
-        true,
-        1,
-        FACTS_TOPIC,
-        TODO_ITEMS_TOPIC,
-        intermediateTopic
-    );
-
-
     @Test
     public void singleAssertion() throws Exception {
-        KafkaStreams streams =
-            FactsToData.factsToData(embeddedKafka.getBrokersAsString(),
-                applicationId,
-                FACTS_TOPIC,
-                stringSerde,
-                factSerde,
-                TODO_ITEMS_TOPIC,
-                stringSerde,
-                TODO_ITEM_SERDE,
-                OBJECT_MAPPER
-            );
-        streams.start();
-
-        Map<String, Object> producerProps = producerProps(embeddedKafka);
-        ProducerFactory<String, Fact> producerFactory =
-            new DefaultKafkaProducerFactory<>(producerProps,
-                stringSerde.serializer(),
-                factSerde.serializer()
-            );
-        KafkaTemplate<String, Fact> template =
-            new KafkaTemplate<>(producerFactory);
-
-        Map<String, Object> consumerProps =
-            consumerProps(randomUUID().toString(), "false", embeddedKafka);
-        consumerProps.put(AUTO_OFFSET_RESET_CONFIG, "earliest");
-        ConsumerFactory consumerFactory = new DefaultKafkaConsumerFactory(
-            consumerProps,
-            stringSerde.deserializer(),
-            TODO_ITEM_SERDE.deserializer()
+        Properties config = new Properties();
+        config.put(APPLICATION_ID_CONFIG, applicationId);
+        config.put(BOOTSTRAP_SERVERS_CONFIG, "localhost");
+        KStreamBuilder kStreamBuilder = new KStreamBuilder();
+        FactsToData.buildFactsToData(kStreamBuilder,
+            FACTS_TOPIC,
+            stringSerde,
+            factSerde,
+            TODO_ITEMS_TOPIC,
+            stringSerde,
+            TODO_ITEM_SERDE,
+            OBJECT_MAPPER
         );
-        Consumer<String, TodoItem> consumer = consumerFactory.createConsumer();
-        embeddedKafka.consumeFromAnEmbeddedTopic(consumer, TODO_ITEMS_TOPIC);
+        ProcessorTopologyTestDriver processorTopologyTestDriver =
+            new ProcessorTopologyTestDriver(new StreamsConfig(config),
+                kStreamBuilder
+            );
 
-        Fact fact = Fact.of("test-entity-id",
-            Attribute.TODO_ITEM_TEXT,
-            "test-todo-item-text-value"
+        String expectedEntity = "test-entity-id";
+        String expectedText = "test-todo-item-text-value";
+        String inputFactKey = randomUUID().toString();
+        Fact inputFact =
+            Fact.of(expectedEntity, Attribute.TODO_ITEM_TEXT, expectedText);
+
+        processorTopologyTestDriver.process(FACTS_TOPIC,
+            inputFactKey,
+            inputFact,
+            stringSerde.serializer(),
+            factSerde.serializer()
         );
 
-        template.send(FACTS_TOPIC, fact);
+        ProducerRecord<String, TodoItem> actual =
+            processorTopologyTestDriver.readOutput(TODO_ITEMS_TOPIC,
+                stringSerde.deserializer(),
+                TODO_ITEM_SERDE.deserializer()
+            );
 
-        List<KeyValue<String, TodoItem>> todoItems = Stream
-            .continually(() -> consumer.poll(500))
-            .flatMap(records -> records.records(TODO_ITEMS_TOPIC))
-            .map(record -> KeyValue.pair(record.key(), record.value()))
-            .take(1)
-            .toList();
-
-        assertEquals(1, todoItems.size());
-        assertEquals(fact.getEntity(), todoItems.get(0).key);
-        assertEquals(fact.getValue().get(), todoItems.get(0).value.getText());
-
-        consumer.close();
-        streams.close();
+        assertEquals(expectedEntity, actual.key());
+        assertEquals(expectedText, actual.value().getText());
+        processorTopologyTestDriver.close();
     }
 }

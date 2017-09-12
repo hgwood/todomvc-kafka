@@ -33,7 +33,29 @@ public class FactsToData {
         config.put(AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         KStreamBuilder builder = new KStreamBuilder();
+        buildFactsToData(
+            builder,
+            factsTopic,
+            factKeySerde,
+            factSerde,
+            todoItemsTopic,
+            todoItemKeySerde,
+            todoItemSerde,
+            objectMapper
+        );
+        return new KafkaStreams(builder, config);
+    }
 
+    public static void buildFactsToData(
+        KStreamBuilder builder,
+        String factsTopic,
+        Serde<String> factKeySerde,
+        Serde<Fact> factSerde,
+        String todoItemsTopic,
+        Serde<String> todoItemKeySerde,
+        Serde<TodoItem> todoItemSerde,
+        ObjectMapper objectMapper
+    ) {
         builder
             .stream(factKeySerde, factSerde, factsTopic)
             .groupBy((factKey, fact) -> fact.getEntity(),
@@ -48,13 +70,10 @@ public class FactsToData {
                 new JsonSerde<>(objectMapper, HashMap.class),
                 "todo-items-aggregation-store"
             )
-            .mapValues(value -> objectMapper.convertValue(
-                value,
+            .mapValues(value -> objectMapper.convertValue(value,
                 TodoItem.class
             ))
             .to(todoItemKeySerde, todoItemSerde, todoItemsTopic);
-
-        return new KafkaStreams(builder, config);
     }
 }
 
