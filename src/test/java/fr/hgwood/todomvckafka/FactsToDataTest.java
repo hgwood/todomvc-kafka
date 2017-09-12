@@ -61,28 +61,28 @@ public class FactsToDataTest {
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
             String expectedEntity = "test-entity-id";
             String expectedText = "test-todo-item-text-value";
-            Boolean expectedCompletionState = true;
+            Boolean expectedCompleted = true;
             KeyValue<String, TodoItem> expected = KeyValue.pair(
                 expectedEntity,
-                new TodoItem(expectedText, expectedCompletionState)
+                new TodoItem(expectedText, expectedCompleted)
             );
 
-            KeyValue<String, Fact> textValueAsstion =
+            KeyValue<String, Fact> textAssertion =
                 KeyValue.pair(randomUUID().toString(),
                     Fact.of(expectedEntity,
                         Attribute.TODO_ITEM_TEXT,
                         expectedText
                     )
                 );
-            KeyValue<String, Fact> completionStateValueAssertion =
+            KeyValue<String, Fact> completedAssertion =
                 KeyValue.pair(randomUUID().toString(), Fact.of(expectedEntity,
                     Attribute.TODO_ITEM_COMPLETED,
-                    expectedCompletionState
+                    expectedCompleted
                 ));
             KeyValue<String, TodoItem> actual = topologyTest
-                .write(FACTS, textValueAsstion)
+                .write(FACTS, textAssertion)
                 .skip(TODO_ITEMS, 1)
-                .write(FACTS, completionStateValueAssertion)
+                .write(FACTS, completedAssertion)
                 .read(TODO_ITEMS);
 
             assertEquals(expected, actual);
