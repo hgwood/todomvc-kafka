@@ -52,4 +52,39 @@ public class FactsToDataTest {
             assertEquals(expected, actual);
         }
     }
+
+    @Test
+    public void twoAssertion() throws Exception {
+        Topology topology =
+            new FactsToDataTopology(FACTS, TODO_ITEMS, OBJECT_MAPPER);
+
+        try (TopologyTest topologyTest = new TopologyTest(topology)) {
+            String expectedEntity = "test-entity-id";
+            String expectedText = "test-todo-item-text-value";
+            Boolean expectedCompletionState = true;
+            KeyValue<String, TodoItem> expected =
+                KeyValue.pair(expectedEntity, new TodoItem(expectedText, expectedCompletionState));
+
+            KeyValue<String, Fact> input1 =
+                KeyValue.pair(randomUUID().toString(),
+                    Fact.of(expectedEntity,
+                        Attribute.TODO_ITEM_TEXT,
+                        expectedText
+                    )
+                );
+            topologyTest.write(FACTS, input1);
+            KeyValue<String, Fact> input2 =
+                KeyValue.pair(randomUUID().toString(),
+                    Fact.of(expectedEntity,
+                        Attribute.TODO_ITEM_COMPLETED,
+                        expectedCompletionState
+                    )
+                );
+            topologyTest.write(FACTS, input2);
+            topologyTest.read(TODO_ITEMS); // ignored
+            KeyValue<String, TodoItem> actual = topologyTest.read(TODO_ITEMS);
+
+            assertEquals(expected, actual);
+        }
+    }
 }
