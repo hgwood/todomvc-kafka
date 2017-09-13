@@ -20,3 +20,12 @@
 - aggregation seem slow to test (FactsToDataTest.singleAssertion takes 40s to run) and I don't see how to test them outside of Streams
   - there seems to be quite a lot of timing issue with streams integration tests
   - SOLUTION: unit testing topologies!! https://github.com/apache/kafka/blob/0.11.0.0/streams/src/test/java/org/apache/kafka/test/ProcessorTopologyTestDriver.java
+  - works well; some tests still need to be refactored
+- action that generate multiple facts should have these facts emitted as part of a transaction
+- how to emit only entities that are "complete" (all the facts received make complete transactions)
+  - group facts by transaction id before grouping them by entity id
+  - that thing does eliminate emitting at all
+  - transactions as messages ?
+    - can flat map into facts if necessary
+    - transactions need to be in one partition per user
+    - makes me think of blockchain : transactions in blocks, but here transactions are facts and blocks are transactions

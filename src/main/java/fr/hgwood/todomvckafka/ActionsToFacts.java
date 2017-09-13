@@ -11,8 +11,10 @@ import org.apache.kafka.streams.kstream.KStreamBuilder;
 
 import java.util.Properties;
 
+import static fr.hgwood.todomvckafka.Transaction.createTransaction;
 import static fr.hgwood.todomvckafka.schema.Attribute.TODO_ITEM_COMPLETED;
 import static fr.hgwood.todomvckafka.schema.Attribute.TODO_ITEM_TEXT;
+import static fr.hgwood.todomvckafka.support.kafkastreams.RandomKey.randomKey;
 import static java.util.UUID.randomUUID;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_OFFSET_RESET_CONFIG;
 import static org.apache.kafka.streams.StreamsConfig.*;
@@ -55,18 +57,20 @@ public class ActionsToFacts {
 
         builder.stream(Serdes.String(), ACTION_SERDE, ACTIONS_TOPIC).flatMap((key, action) -> {
             if (action.getType() == ActionType.ADD_TODO) {
-                String entity = randomUUID().toString();
+                Transaction transaction = createTransaction();
+                String entity = randomKey();
                 return List.of(
                     KeyValue.pair(randomUUID().toString(),
-                        Fact.of(entity, TODO_ITEM_TEXT, action.getText())
+                        Fact.of(entity, TODO_ITEM_TEXT, action.getText(), transaction.getId())
                     ),
                     KeyValue.pair(randomUUID().toString(),
-                        Fact.of(entity, TODO_ITEM_COMPLETED, false)
+                        Fact.of(entity, TODO_ITEM_COMPLETED, false, transaction.getId())
                     )
                 );
             } else if (action.getType() == ActionType.DELETE_TODO) {
+                Transaction transaction = createTransaction();
                 return List.of(KeyValue.pair(randomUUID().toString(),
-                    Fact.retractEntity(action.getId())
+                    Fact.retractEntity(action.getId(), transaction.getId())
                 ));
             } else {
                 return List.of();
