@@ -10,7 +10,9 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
 
 @AllArgsConstructor
-public class FactsToDataTopology implements Topology {
+public class EntityGatherer implements Topology {
+
+    public static final String STORE_NAME = "entity-gatherer-store";
 
     private final TopicInfo<String, Fact> facts;
     private final TopicInfo<String, TodoItem> todoItems;
@@ -21,13 +23,13 @@ public class FactsToDataTopology implements Topology {
         builder
             .stream(facts.getKeySerde(), facts.getValueSerde(), facts.getName())
             .groupBy((factKey, fact) -> fact.getEntity(), Serdes.String(), facts.getValueSerde())
-            .aggregate(() -> HashMap.<String, Object>empty(),
-                (entityKey, fact, entity) -> entity.put(
-                    fact.getAttribute().get().getName(),
+            .aggregate(
+                () -> HashMap.<String, Object>empty(),
+                (entityKey, fact, entity) -> entity.put(fact.getAttribute().get().getName(),
                     fact.getValue().get()
                 ),
                 new JsonSerde<>(objectMapper, HashMap.class),
-                "todo-items-aggregation-store"
+                STORE_NAME
             )
             .mapValues(value -> objectMapper.convertValue(value, TodoItem.class))
             .to(todoItems.getKeySerde(), todoItems.getValueSerde(), todoItems.getName());

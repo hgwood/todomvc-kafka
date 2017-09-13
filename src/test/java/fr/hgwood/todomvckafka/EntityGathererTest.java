@@ -14,7 +14,8 @@ import org.junit.Test;
 import static fr.hgwood.todomvckafka.support.kafkastreams.RandomKey.withRandomKey;
 import static org.junit.Assert.assertEquals;
 
-public class FactsToDataTest {
+public class EntityGathererTest {
+    
     private static final ObjectMapper OBJECT_MAPPER =
         new ObjectMapper().registerModule(new VavrModule());
     private static final TopicInfo<String, Fact> FACTS = new TopicInfo("test-facts-topic",
@@ -29,7 +30,7 @@ public class FactsToDataTest {
 
     @Test
     public void singleAssertion() throws Exception {
-        Topology topology = new FactsToDataTopology(FACTS, TODO_ITEMS, OBJECT_MAPPER);
+        Topology topology = new EntityGatherer(FACTS, TODO_ITEMS, OBJECT_MAPPER);
 
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
             String expectedEntity = "test-entity-id";
@@ -47,7 +48,7 @@ public class FactsToDataTest {
 
     @Test
     public void twoAssertion() throws Exception {
-        Topology topology = new FactsToDataTopology(FACTS, TODO_ITEMS, OBJECT_MAPPER);
+        Topology topology = new EntityGatherer(FACTS, TODO_ITEMS, OBJECT_MAPPER);
 
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
             String expectedEntity = "test-entity-id";
