@@ -15,7 +15,7 @@ import static fr.hgwood.todomvckafka.support.kafkastreams.RandomKey.withRandomKe
 import static org.junit.Assert.assertEquals;
 
 public class EntityGathererTest {
-    
+
     private static final ObjectMapper OBJECT_MAPPER =
         new ObjectMapper().registerModule(new VavrModule());
     private static final TopicInfo<String, Fact> FACTS = new TopicInfo("test-facts-topic",
@@ -69,6 +69,21 @@ public class EntityGathererTest {
                 .write(FACTS, completedAssertion)
                 .read(TODO_ITEMS);
 
+            assertEquals(expected, actual);
+        }
+    }
+
+    @Test
+    public void entityRetraction() throws Exception {
+        Topology topology = new EntityGatherer(FACTS, TODO_ITEMS, OBJECT_MAPPER);
+
+        try (TopologyTest topologyTest = new TopologyTest(topology)) {
+            String expectedEntity = "test-entity-id";
+            KeyValue<String, TodoItem> expected = KeyValue.pair(expectedEntity, null);
+            KeyValue<String, Fact> entityRetraction =
+                withRandomKey(Fact.retractEntity(expectedEntity));
+            KeyValue<String, TodoItem> actual =
+                topologyTest.write(FACTS, entityRetraction).read(TODO_ITEMS);
             assertEquals(expected, actual);
         }
     }

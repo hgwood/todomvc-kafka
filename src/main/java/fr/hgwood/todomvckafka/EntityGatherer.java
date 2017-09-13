@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
 
+import static fr.hgwood.todomvckafka.Fact.FactKind.ASSERTION;
+
 @AllArgsConstructor
 public class EntityGatherer implements Topology {
 
@@ -23,15 +25,24 @@ public class EntityGatherer implements Topology {
         builder
             .stream(facts.getKeySerde(), facts.getValueSerde(), facts.getName())
             .groupBy((factKey, fact) -> fact.getEntity(), Serdes.String(), facts.getValueSerde())
-            .aggregate(
-                () -> HashMap.<String, Object>empty(),
-                (entityKey, fact, entity) -> entity.put(fact.getAttribute().get().getName(),
-                    fact.getValue().get()
-                ),
+            .aggregate(() -> HashMap.<String, Object>empty(),
+                this::reduceFields,
                 new JsonSerde<>(objectMapper, HashMap.class),
                 STORE_NAME
             )
             .mapValues(value -> objectMapper.convertValue(value, TodoItem.class))
             .to(todoItems.getKeySerde(), todoItems.getValueSerde(), todoItems.getName());
+    }
+
+    private HashMap<String, Object> reduceFields(
+        String entity,
+        Fact fact,
+        HashMap<String, Object> fields
+    ) {
+        if (fact.getKind() == ASSERTION) {
+            return fields.put(fact.getAttribute().get().getName(), fact.getValue().get());
+        } else {
+            return null;
+        }
     }
 }
