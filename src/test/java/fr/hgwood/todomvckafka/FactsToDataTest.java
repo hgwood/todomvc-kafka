@@ -11,7 +11,7 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
 import org.junit.Test;
 
-import static java.util.UUID.randomUUID;
+import static fr.hgwood.todomvckafka.support.kafkastreams.RandomKey.withRandomKey;
 import static org.junit.Assert.assertEquals;
 
 public class FactsToDataTest {
@@ -37,11 +37,9 @@ public class FactsToDataTest {
             KeyValue<String, TodoItem> expected =
                 KeyValue.pair(expectedEntity, new TodoItem(expectedText, null));
 
-            KeyValue<String, Fact> input = KeyValue.pair(randomUUID().toString(),
-                Fact.of(expectedEntity, Attribute.TODO_ITEM_TEXT, expectedText)
-            );
-            topologyTest.write(FACTS, input);
-            KeyValue<String, TodoItem> actual = topologyTest.read(TODO_ITEMS);
+            KeyValue<String, Fact> input =
+                withRandomKey(Fact.of(expectedEntity, Attribute.TODO_ITEM_TEXT, expectedText));
+            KeyValue<String, TodoItem> actual = topologyTest.write(FACTS, input).read(TODO_ITEMS);
 
             assertEquals(expected, actual);
         }
@@ -58,12 +56,12 @@ public class FactsToDataTest {
             KeyValue<String, TodoItem> expected =
                 KeyValue.pair(expectedEntity, new TodoItem(expectedText, expectedCompleted));
 
-            KeyValue<String, Fact> textAssertion = KeyValue.pair(randomUUID().toString(),
-                Fact.of(expectedEntity, Attribute.TODO_ITEM_TEXT, expectedText)
-            );
-            KeyValue<String, Fact> completedAssertion = KeyValue.pair(randomUUID().toString(),
-                Fact.of(expectedEntity, Attribute.TODO_ITEM_COMPLETED, expectedCompleted)
-            );
+            KeyValue<String, Fact> textAssertion =
+                withRandomKey(Fact.of(expectedEntity, Attribute.TODO_ITEM_TEXT, expectedText));
+            KeyValue<String, Fact> completedAssertion = withRandomKey(Fact.of(expectedEntity,
+                Attribute.TODO_ITEM_COMPLETED,
+                expectedCompleted
+            ));
             KeyValue<String, TodoItem> actual = topologyTest
                 .write(FACTS, textAssertion)
                 .skip(TODO_ITEMS, 1)
