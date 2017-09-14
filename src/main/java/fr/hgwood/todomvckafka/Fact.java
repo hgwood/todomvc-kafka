@@ -19,21 +19,19 @@ public class Fact {
     private final String entity;
     private final Option<Attribute> attribute;
     private final Option<Object> value;
-    private final Transaction.Id transaction;
 
-    public static Fact of(String entity, Attribute attribute, Object value, Transaction.Id transaction) {
+    public static Fact of(String entity, Attribute attribute, Object value) {
         requireValidValue(attribute, value);
         return new Fact(
             ASSERTION,
             entity,
             Option.of(attribute),
-            Option.of(value),
-            transaction
+            Option.of(value)
         );
     }
 
-    public static Fact retractEntity(String entity, Transaction.Id transaction) {
-        return new Fact(RETRACTION, entity, Option.none(), Option.none(), transaction);
+    public static Fact retractEntity(String entity) {
+        return new Fact(RETRACTION, entity, Option.none(), Option.none());
     }
 
     private static void requireValidValue(Attribute attribute, Object value) {

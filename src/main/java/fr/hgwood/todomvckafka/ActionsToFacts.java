@@ -2,31 +2,29 @@ package fr.hgwood.todomvckafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.hgwood.todomvckafka.support.json.JsonSerde;
-import io.vavr.collection.List;
+import io.vavr.collection.HashSet;
 import io.vavr.jackson.datatype.VavrModule;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
 
 import java.util.Properties;
 
-import static fr.hgwood.todomvckafka.Transaction.createTransaction;
 import static fr.hgwood.todomvckafka.schema.Attribute.TODO_ITEM_COMPLETED;
 import static fr.hgwood.todomvckafka.schema.Attribute.TODO_ITEM_TEXT;
 import static fr.hgwood.todomvckafka.support.kafkastreams.RandomKey.randomKey;
-import static java.util.UUID.randomUUID;
 import static org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_OFFSET_RESET_CONFIG;
 import static org.apache.kafka.streams.StreamsConfig.*;
 
 public class ActionsToFacts {
     public static final String ACTIONS_TOPIC = "actions";
-    public static final String FACTS_TOPIC = "facts";
+    public static final String TRANSACTIONS_TOPIC = "facts";
     private static final ObjectMapper OBJECT_MAPPER =
         new ObjectMapper().registerModule(new VavrModule());
     public static final JsonSerde<Action> ACTION_SERDE =
         new JsonSerde<>(OBJECT_MAPPER, Action.class);
-    public static final JsonSerde<Fact> FACT_SERDE = new JsonSerde<>(OBJECT_MAPPER, Fact.class);
+    public static final JsonSerde<Transaction> TRANSACTION_SERDE =
+        new JsonSerde<>(OBJECT_MAPPER, Transaction.class);
 
     public static void main(String[] args) {
         KafkaStreams streams =
@@ -55,27 +53,19 @@ public class ActionsToFacts {
 
         KStreamBuilder builder = new KStreamBuilder();
 
-        builder.stream(Serdes.String(), ACTION_SERDE, ACTIONS_TOPIC).flatMap((key, action) -> {
+        builder.stream(Serdes.String(), ACTION_SERDE, ACTIONS_TOPIC).mapValues(action -> {
             if (action.getType() == ActionType.ADD_TODO) {
-                Transaction transaction = createTransaction();
                 String entity = randomKey();
-                return List.of(
-                    KeyValue.pair(randomUUID().toString(),
-                        Fact.of(entity, TODO_ITEM_TEXT, action.getText(), transaction.getId())
-                    ),
-                    KeyValue.pair(randomUUID().toString(),
-                        Fact.of(entity, TODO_ITEM_COMPLETED, false, transaction.getId())
-                    )
-                );
-            } else if (action.getType() == ActionType.DELETE_TODO) {
-                Transaction transaction = createTransaction();
-                return List.of(KeyValue.pair(randomUUID().toString(),
-                    Fact.retractEntity(action.getId(), transaction.getId())
+                return new Transaction(HashSet.of(
+                    Fact.of(entity, TODO_ITEM_TEXT, action.getText()),
+                    Fact.of(entity, TODO_ITEM_COMPLETED, false)
                 ));
+            } else if (action.getType() == ActionType.DELETE_TODO) {
+                return new Transaction(HashSet.of(Fact.retractEntity(action.getId())));
             } else {
-                return List.of();
+                return null;
             }
-        }).to(Serdes.String(), FACT_SERDE, FACTS_TOPIC);
+        }).to(Serdes.String(), TRANSACTION_SERDE, TRANSACTIONS_TOPIC);
 
         return new KafkaStreams(builder, config);
     }

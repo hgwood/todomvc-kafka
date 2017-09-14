@@ -1,5 +1,6 @@
 package fr.hgwood.todomvckafka;
 
+import io.vavr.collection.Set;
 import lombok.Value;
 
 import java.time.ZonedDateTime;
@@ -10,15 +11,7 @@ import static java.util.UUID.randomUUID;
 
 @Value
 public class Transaction {
-    private final Id id;
-    private final ZonedDateTime timestamp;
 
-    public static Transaction createTransaction() {
-        return new Transaction(new Id(randomUUID()), now());
-    }
+    private final Set<Fact> facts;
 
-    @Value
-    public static class Id {
-        private final UUID value;
-    }
 }

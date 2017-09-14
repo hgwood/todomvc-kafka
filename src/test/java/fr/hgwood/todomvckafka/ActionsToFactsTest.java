@@ -30,7 +30,9 @@ public class ActionsToFactsTest {
     private static final Serde<String> stringSerde = Serdes.String();
 
     @Rule
-    public KafkaEmbedded embeddedKafka = new KafkaEmbedded(1, true, 1, ACTIONS_TOPIC, FACTS_TOPIC);
+    public KafkaEmbedded embeddedKafka = new KafkaEmbedded(1, true, 1, ACTIONS_TOPIC,
+        TRANSACTIONS_TOPIC
+    );
 
 
     @Test
@@ -50,10 +52,10 @@ public class ActionsToFactsTest {
         consumerProps.put(AUTO_OFFSET_RESET_CONFIG, "earliest");
         ConsumerFactory consumerFactory = new DefaultKafkaConsumerFactory(consumerProps,
             stringSerde.deserializer(),
-            FACT_SERDE.deserializer()
+            TRANSACTION_SERDE.deserializer()
         );
-        Consumer<String, Fact> consumer = consumerFactory.createConsumer();
-        embeddedKafka.consumeFromAnEmbeddedTopic(consumer, FACTS_TOPIC);
+        Consumer<String, Transaction> consumer = consumerFactory.createConsumer();
+        embeddedKafka.consumeFromAnEmbeddedTopic(consumer, TRANSACTIONS_TOPIC);
 
         Action inputAction =
             Action.builder().type(ActionType.ADD_TODO).text("test-add-todo-action-text").build();
@@ -64,8 +66,9 @@ public class ActionsToFactsTest {
             // this hard timeout makes the test fail if code is debugged with breakpoints
             .continually(() -> consumer.poll(1000))
             .takeUntil(records -> records.isEmpty())
-            .flatMap(records -> records.records(FACTS_TOPIC))
+            .flatMap(records -> records.records(TRANSACTIONS_TOPIC))
             .map(ConsumerRecord::value)
+            .flatMap(Transaction::getFacts)
             .toList();
 
         assertTrue("expected one entity to be created but there was multiple",
@@ -103,10 +106,10 @@ public class ActionsToFactsTest {
         consumerProps.put(AUTO_OFFSET_RESET_CONFIG, "earliest");
         ConsumerFactory consumerFactory = new DefaultKafkaConsumerFactory(consumerProps,
             stringSerde.deserializer(),
-            FACT_SERDE.deserializer()
+            TRANSACTION_SERDE.deserializer()
         );
-        Consumer<String, Fact> consumer = consumerFactory.createConsumer();
-        embeddedKafka.consumeFromAnEmbeddedTopic(consumer, FACTS_TOPIC);
+        Consumer<String, Transaction> consumer = consumerFactory.createConsumer();
+        embeddedKafka.consumeFromAnEmbeddedTopic(consumer, TRANSACTIONS_TOPIC);
 
         Action inputAction =
             Action.builder().type(ActionType.DELETE_TODO).id("test-delete-action-id").build();
@@ -117,8 +120,9 @@ public class ActionsToFactsTest {
             // this hard timeout makes the test fail if code is debugged with breakpoints
             .continually(() -> consumer.poll(1000))
             .takeUntil(records -> records.isEmpty())
-            .flatMap(records -> records.records(FACTS_TOPIC))
+            .flatMap(records -> records.records(TRANSACTIONS_TOPIC))
             .map(ConsumerRecord::value)
+            .flatMap(Transaction::getFacts)
             .toList();
 
         assertTrue("expected one fact setting the text of the new todo but there was none",
