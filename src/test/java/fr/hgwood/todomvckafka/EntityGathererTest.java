@@ -10,6 +10,7 @@ import fr.hgwood.todomvckafka.support.kafkastreams.TopicInfo;
 import fr.hgwood.todomvckafka.support.kafkastreams.Topology;
 import fr.hgwood.todomvckafka.support.kafkastreams.TopologyTest;
 import io.vavr.collection.HashSet;
+import io.vavr.collection.Map;
 import io.vavr.jackson.datatype.VavrModule;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
@@ -27,6 +28,11 @@ public class EntityGathererTest {
         Serdes.String(),
         new JsonSerde<>(OBJECT_MAPPER, Transaction.class)
     );
+    private static final TopicInfo<String, Map> ENTITIES = new TopicInfo<>(
+        "test-todo-item-topic",
+        Serdes.String(),
+        new JsonSerde<>(OBJECT_MAPPER, Map.class)
+    );
     private static final TopicInfo<String, TodoItem> TODO_ITEMS = new TopicInfo<>(
         "test-todo-item-topic",
         Serdes.String(),
@@ -35,7 +41,7 @@ public class EntityGathererTest {
 
     @Test
     public void singleAssertion() throws Exception {
-        Topology topology = new EntityGatherer(TRANSACTIONS, TODO_ITEMS, OBJECT_MAPPER);
+        Topology topology = new EntityGatherer(TRANSACTIONS, ENTITIES);
 
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
             String expectedEntity = "test-entity-id";
@@ -57,7 +63,7 @@ public class EntityGathererTest {
 
     @Test
     public void twoAssertion() throws Exception {
-        Topology topology = new EntityGatherer(TRANSACTIONS, TODO_ITEMS, OBJECT_MAPPER);
+        Topology topology = new EntityGatherer(TRANSACTIONS, ENTITIES);
 
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
             String expectedEntity = "test-entity-id";
@@ -85,7 +91,7 @@ public class EntityGathererTest {
 
     @Test
     public void entityRetraction() throws Exception {
-        Topology topology = new EntityGatherer(TRANSACTIONS, TODO_ITEMS, OBJECT_MAPPER);
+        Topology topology = new EntityGatherer(TRANSACTIONS, ENTITIES);
 
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
             String expectedEntity = "test-entity-id";

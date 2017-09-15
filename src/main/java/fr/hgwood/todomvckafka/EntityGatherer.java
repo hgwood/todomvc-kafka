@@ -1,14 +1,11 @@
 package fr.hgwood.todomvckafka;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.hgwood.todomvckafka.facts.Fact;
-import fr.hgwood.todomvckafka.support.json.JsonSerde;
 import fr.hgwood.todomvckafka.support.kafkastreams.TopicInfo;
 import fr.hgwood.todomvckafka.support.kafkastreams.Topology;
 import io.vavr.collection.HashMap;
 import io.vavr.collection.Map;
 import io.vavr.collection.Set;
-import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
 
 import static fr.hgwood.todomvckafka.support.kafkastreams.ConvertFromVavr.toKeyValues;
@@ -16,17 +13,13 @@ import static fr.hgwood.todomvckafka.support.kafkastreams.ConvertFromVavr.toKeyV
 public class EntityGatherer implements Topology {
 
     private final TopicInfo<String, Transaction> transactions;
-    private final TopicInfo<String, TodoItem> todoItems;
-    private final Serde<Map> mapSerde;
+    private final TopicInfo<String, Map> entities;
 
     public EntityGatherer(
-        TopicInfo<String, Transaction> transactions,
-        TopicInfo<String, TodoItem> todoItems,
-        ObjectMapper objectMapper
+        TopicInfo<String, Transaction> transactions, TopicInfo<String, Map> entities
     ) {
         this.transactions = transactions;
-        this.todoItems = todoItems;
-        this.mapSerde = new JsonSerde<>(objectMapper, Map.class);
+        this.entities = entities;
     }
 
     @Override
@@ -38,7 +31,7 @@ public class EntityGatherer implements Topology {
             )
             .mapValues(transaction -> this.mergeFacts(transaction.getFacts()))
             .flatMap((transactionKey, entities) -> toKeyValues(entities))
-            .to(todoItems.getKeySerde(), mapSerde, todoItems.getName());
+            .to(entities.getKeySerde(), entities.getValueSerde(), entities.getName());
     }
 
     private Map<String, Map> mergeFacts(Set<Fact> facts) {
