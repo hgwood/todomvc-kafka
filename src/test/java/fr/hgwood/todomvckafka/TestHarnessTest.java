@@ -6,6 +6,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.kafka.core.*;
 import org.springframework.kafka.test.rule.KafkaEmbedded;
@@ -15,6 +16,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
+@Ignore
 public class TestHarnessTest {
 
     private static final String TEMPLATE_TOPIC = "template-topic";
@@ -38,7 +40,8 @@ public class TestHarnessTest {
         Map<String, Object> consumerProps =
             KafkaTestUtils.consumerProps("testGroup", "true", embeddedKafka);
         consumerProps.put("auto.offset.reset", "earliest");
-        ConsumerFactory consumerFactory = new DefaultKafkaConsumerFactory(consumerProps,
+        ConsumerFactory<String, String> consumerFactory = new DefaultKafkaConsumerFactory<>(
+            consumerProps,
             stringSerde.deserializer(),
             stringSerde.deserializer()
         );

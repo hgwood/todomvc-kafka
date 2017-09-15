@@ -2,44 +2,37 @@ package fr.hgwood.todomvckafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import fr.hgwood.todomvckafka.actions.Action;
+import fr.hgwood.todomvckafka.actions.todoitem.AddTodo;
+import fr.hgwood.todomvckafka.actions.todoitem.DeleteTodo;
 import fr.hgwood.todomvckafka.support.json.JsonSerde;
 import fr.hgwood.todomvckafka.support.kafkastreams.TopicInfo;
 import fr.hgwood.todomvckafka.support.kafkastreams.Topology;
 import fr.hgwood.todomvckafka.support.kafkastreams.TopologyTest;
 import io.vavr.collection.HashSet;
-import io.vavr.collection.List;
-import io.vavr.collection.Stream;
 import io.vavr.jackson.datatype.VavrModule;
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
 import org.junit.Test;
-import org.springframework.kafka.core.*;
 
-import java.util.Map;
-
-import static fr.hgwood.todomvckafka.ActionType.ADD_TODO;
-import static fr.hgwood.todomvckafka.ActionType.DELETE_TODO;
-import static fr.hgwood.todomvckafka.ActionsToFacts.*;
-import static fr.hgwood.todomvckafka.Fact.FactKind.RETRACTION;
 import static fr.hgwood.todomvckafka.schema.Attribute.TODO_ITEM_COMPLETED;
 import static fr.hgwood.todomvckafka.schema.Attribute.TODO_ITEM_TEXT;
 import static fr.hgwood.todomvckafka.support.kafkastreams.RandomKey.withRandomKey;
-import static org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_OFFSET_RESET_CONFIG;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.springframework.kafka.test.utils.KafkaTestUtils.producerProps;
 
 public class PontificatorTest {
 
     private static final ObjectMapper OBJECT_MAPPER =
         new ObjectMapper().registerModule(new VavrModule()).registerModule(new JavaTimeModule());
-    private static final TopicInfo<String, Action> ACTIONS = new TopicInfo<>("test-actions-topic",
+    private static final TopicInfo<String, Action> ACTIONS = new TopicInfo<>(
+        "test-actions-topic",
         Serdes.String(),
         new JsonSerde<>(OBJECT_MAPPER, Action.class)
     );
+//    private static final TopicInfo<String, Action> ACTIONS2 = new TopicInfo<>("test-actions-topic",
+//        Serdes.String(),
+//        new JsonSerde<>(OBJECT_MAPPER, Action.class)
+//    );
     private static final TopicInfo<String, Transaction> TRANSACTIONS = new TopicInfo<>(
         "test-todo-item-topic",
         Serdes.String(),
@@ -65,8 +58,7 @@ public class PontificatorTest {
                 ))
             );
 
-            KeyValue<String, Action> input =
-                withRandomKey(new Action(ADD_TODO, null, expectedText));
+            KeyValue<String, Action> input = withRandomKey(new AddTodo(expectedText));
             KeyValue<String, Transaction> actual =
                 topologyTest.write(ACTIONS, input).read(TRANSACTIONS);
 
@@ -82,13 +74,11 @@ public class PontificatorTest {
 
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
             String entityToDelete = "test-entity-id";
-            KeyValue<String, Transaction> expected = KeyValue.pair(
-                expectedTransactionId,
+            KeyValue<String, Transaction> expected = KeyValue.pair(expectedTransactionId,
                 new Transaction(HashSet.of(Fact.retractEntity(entityToDelete)))
             );
 
-            KeyValue<String, Action> input =
-                withRandomKey(new Action(DELETE_TODO, entityToDelete, null));
+            KeyValue<String, Action> input = withRandomKey(new DeleteTodo(entityToDelete));
             KeyValue<String, Transaction> actual =
                 topologyTest.write(ACTIONS, input).read(TRANSACTIONS);
 
