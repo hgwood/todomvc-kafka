@@ -20,15 +20,15 @@ public class EntityGathererTest {
 
     private static final ObjectMapper OBJECT_MAPPER =
         new ObjectMapper().registerModule(new VavrModule()).registerModule(new JavaTimeModule());
-    private static final TopicInfo<String, Transaction> TRANSACTIONS = new TopicInfo(
+    private static final TopicInfo<String, Transaction> TRANSACTIONS = new TopicInfo<>(
         "test-transactions-topic",
         Serdes.String(),
-        new JsonSerde(OBJECT_MAPPER, Transaction.class)
+        new JsonSerde<>(OBJECT_MAPPER, Transaction.class)
     );
-    private static final TopicInfo<String, TodoItem> TODO_ITEMS = new TopicInfo(
+    private static final TopicInfo<String, TodoItem> TODO_ITEMS = new TopicInfo<>(
         "test-todo-item-topic",
         Serdes.String(),
-        new JsonSerde(OBJECT_MAPPER, TodoItem.class)
+        new JsonSerde<>(OBJECT_MAPPER, TodoItem.class)
     );
 
     @Test
