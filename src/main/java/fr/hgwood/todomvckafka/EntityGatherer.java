@@ -12,6 +12,7 @@ import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
 
 import static fr.hgwood.todomvckafka.Fact.FactKind.ASSERTION;
+import static fr.hgwood.todomvckafka.support.kafkastreams.ConvertFromVavr.toKeyValues;
 
 public class EntityGatherer implements Topology {
 
@@ -34,7 +35,7 @@ public class EntityGatherer implements Topology {
         builder
             .stream(transactions.getKeySerde(), transactions.getValueSerde(), transactions.getName())
             .mapValues(transaction -> this.mergeFacts(transaction.getFacts()))
-            .flatMap((transactionKey, entities) -> entities.map(entity -> KeyValue.pair(entity._1, entity._2)))
+            .flatMap((transactionKey, entities) -> toKeyValues(entities))
             .to(todoItems.getKeySerde(), mapSerde, todoItems.getName());
     }
 
