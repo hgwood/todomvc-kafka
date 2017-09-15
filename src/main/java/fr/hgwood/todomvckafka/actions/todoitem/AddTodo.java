@@ -22,8 +22,8 @@ public class AddTodo implements Action {
     public Set<Fact> deriveFacts(Supplier<String> entityIdSupplier) {
         String entity = entityIdSupplier.get();
         return HashSet.of(
-            new ValueAssertion(entity, TODO_ITEM_TEXT, this.text),
-            new ValueAssertion(entity, TODO_ITEM_COMPLETED, false)
+            new ValueAssertion<>(entity, TODO_ITEM_TEXT, this.text),
+            new ValueAssertion<>(entity, TODO_ITEM_COMPLETED, false)
         );
     }
 }

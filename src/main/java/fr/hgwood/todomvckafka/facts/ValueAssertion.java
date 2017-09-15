@@ -4,12 +4,10 @@ import fr.hgwood.todomvckafka.schema.Attribute;
 import io.vavr.collection.Map;
 import lombok.Value;
 
-import static java.lang.String.format;
-
 @Value
 public class ValueAssertion<T> implements Fact {
     private final String entity;
-    private final Attribute attribute;
+    private final Attribute<T> attribute;
     private final T value;
 
     @Override

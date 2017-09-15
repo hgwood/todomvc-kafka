@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import fr.hgwood.todomvckafka.facts.EntityRetraction;
 import fr.hgwood.todomvckafka.facts.ValueAssertion;
-import fr.hgwood.todomvckafka.schema.Attribute;
 import fr.hgwood.todomvckafka.support.json.JsonSerde;
 import fr.hgwood.todomvckafka.support.kafkastreams.TopicInfo;
 import fr.hgwood.todomvckafka.support.kafkastreams.Topology;
@@ -16,6 +15,8 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
 import org.junit.Test;
 
+import static fr.hgwood.todomvckafka.schema.Attribute.TODO_ITEM_COMPLETED;
+import static fr.hgwood.todomvckafka.schema.Attribute.TODO_ITEM_TEXT;
 import static fr.hgwood.todomvckafka.support.kafkastreams.RandomKey.withRandomKey;
 import static org.junit.Assert.assertEquals;
 
@@ -28,8 +29,7 @@ public class EntityGathererTest {
         Serdes.String(),
         new JsonSerde<>(OBJECT_MAPPER, Transaction.class)
     );
-    private static final TopicInfo<String, Map> ENTITIES = new TopicInfo<>(
-        "test-todo-item-topic",
+    private static final TopicInfo<String, Map> ENTITIES = new TopicInfo<>("test-todo-item-topic",
         Serdes.String(),
         new JsonSerde<>(OBJECT_MAPPER, Map.class)
     );
@@ -51,7 +51,7 @@ public class EntityGathererTest {
 
             KeyValue<String, Transaction> input =
                 withRandomKey(new Transaction(HashSet.of(new ValueAssertion<>(expectedEntity,
-                    Attribute.TODO_ITEM_TEXT,
+                    TODO_ITEM_TEXT,
                     expectedText
                 ))));
             KeyValue<String, TodoItem> actual =
@@ -74,11 +74,11 @@ public class EntityGathererTest {
 
             KeyValue<String, Transaction> input =
                 withRandomKey(new Transaction(HashSet.of(new ValueAssertion<>(expectedEntity,
-                        Attribute.TODO_ITEM_TEXT,
+                        TODO_ITEM_TEXT,
                         expectedText
                     ),
                     new ValueAssertion<>(expectedEntity,
-                        Attribute.TODO_ITEM_COMPLETED,
+                        TODO_ITEM_COMPLETED,
                         expectedCompleted
                     )
                 )));

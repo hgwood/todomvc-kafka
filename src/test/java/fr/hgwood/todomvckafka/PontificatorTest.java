@@ -30,10 +30,6 @@ public class PontificatorTest {
         Serdes.String(),
         new JsonSerde<>(OBJECT_MAPPER, Action.class)
     );
-    //    private static final TopicInfo<String, Action> ACTIONS2 = new TopicInfo<>("test-actions-topic",
-    //        Serdes.String(),
-    //        new JsonSerde<>(OBJECT_MAPPER, Action.class)
-    //    );
     private static final TopicInfo<String, Transaction> TRANSACTIONS = new TopicInfo<>(
         "test-todo-item-topic",
         Serdes.String(),
@@ -54,11 +50,11 @@ public class PontificatorTest {
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
             String expectedText = "test-todo-item-text";
             KeyValue<String, Transaction> expected = KeyValue.pair(expectedTransactionId,
-                new Transaction(HashSet.of(new ValueAssertion(expectedEntityId,
+                new Transaction(HashSet.of(new ValueAssertion<>(expectedEntityId,
                         TODO_ITEM_TEXT,
                         expectedText
                     ),
-                    new ValueAssertion(expectedEntityId, TODO_ITEM_COMPLETED, false)
+                    new ValueAssertion<>(expectedEntityId, TODO_ITEM_COMPLETED, false)
                 ))
             );
 

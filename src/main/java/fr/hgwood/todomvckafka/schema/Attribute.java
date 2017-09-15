@@ -1,27 +1,15 @@
 package fr.hgwood.todomvckafka.schema;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Value;
 
-import static java.lang.String.format;
-
-@AllArgsConstructor
-@Getter
-public enum Attribute {
-    TODO_ITEM_TEXT("todo-item", "text", String.class),
-    TODO_ITEM_COMPLETED("todo-item", "completed", Boolean.class);
+@Value
+public class Attribute<T> {
+    public static Attribute<String> TODO_ITEM_TEXT =
+        new Attribute<>("todo-item", "text", String.class);
+    public static Attribute<Boolean> TODO_ITEM_COMPLETED =
+        new Attribute<>("todo-item", "completed", Boolean.class);
 
     private final String namespace;
     private final String name;
-    private final Class<?> type;
-
-    public boolean isValidValue(Object value) {
-        return this.type.isAssignableFrom(value.getClass());
-    }
-
-    @JsonValue
-    public String getFullName() {
-        return format("%s/%s", namespace, name);
-    }
+    private final Class<T> type;
 }
