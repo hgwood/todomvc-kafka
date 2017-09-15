@@ -1,7 +1,8 @@
 package fr.hgwood.todomvckafka.actions.todoitem;
 
-import fr.hgwood.todomvckafka.Fact;
 import fr.hgwood.todomvckafka.actions.Action;
+import fr.hgwood.todomvckafka.facts.EntityRetraction;
+import fr.hgwood.todomvckafka.facts.Fact;
 import io.vavr.collection.HashSet;
 import io.vavr.collection.Set;
 import lombok.EqualsAndHashCode;
@@ -16,6 +17,6 @@ public class DeleteTodo implements Action {
 
     @Override
     public Set<Fact> deriveFacts(Supplier<String> entityIdSupplier) {
-        return HashSet.of(Fact.retractEntity(this.id));
+        return HashSet.of(new EntityRetraction(this.id));
     }
 }

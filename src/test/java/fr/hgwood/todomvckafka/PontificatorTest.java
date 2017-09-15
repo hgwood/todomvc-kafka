@@ -5,6 +5,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import fr.hgwood.todomvckafka.actions.Action;
 import fr.hgwood.todomvckafka.actions.todoitem.AddTodo;
 import fr.hgwood.todomvckafka.actions.todoitem.DeleteTodo;
+import fr.hgwood.todomvckafka.facts.EntityRetraction;
+import fr.hgwood.todomvckafka.facts.ValueAssertion;
 import fr.hgwood.todomvckafka.support.json.JsonSerde;
 import fr.hgwood.todomvckafka.support.kafkastreams.TopicInfo;
 import fr.hgwood.todomvckafka.support.kafkastreams.Topology;
@@ -24,15 +26,14 @@ public class PontificatorTest {
 
     private static final ObjectMapper OBJECT_MAPPER =
         new ObjectMapper().registerModule(new VavrModule()).registerModule(new JavaTimeModule());
-    private static final TopicInfo<String, Action> ACTIONS = new TopicInfo<>(
-        "test-actions-topic",
+    private static final TopicInfo<String, Action> ACTIONS = new TopicInfo<>("test-actions-topic",
         Serdes.String(),
         new JsonSerde<>(OBJECT_MAPPER, Action.class)
     );
-//    private static final TopicInfo<String, Action> ACTIONS2 = new TopicInfo<>("test-actions-topic",
-//        Serdes.String(),
-//        new JsonSerde<>(OBJECT_MAPPER, Action.class)
-//    );
+    //    private static final TopicInfo<String, Action> ACTIONS2 = new TopicInfo<>("test-actions-topic",
+    //        Serdes.String(),
+    //        new JsonSerde<>(OBJECT_MAPPER, Action.class)
+    //    );
     private static final TopicInfo<String, Transaction> TRANSACTIONS = new TopicInfo<>(
         "test-todo-item-topic",
         Serdes.String(),
@@ -53,8 +54,11 @@ public class PontificatorTest {
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
             String expectedText = "test-todo-item-text";
             KeyValue<String, Transaction> expected = KeyValue.pair(expectedTransactionId,
-                new Transaction(HashSet.of(Fact.of(expectedEntityId, TODO_ITEM_TEXT, expectedText),
-                    Fact.of(expectedEntityId, TODO_ITEM_COMPLETED, false)
+                new Transaction(HashSet.of(new ValueAssertion(expectedEntityId,
+                        TODO_ITEM_TEXT,
+                        expectedText
+                    ),
+                    new ValueAssertion(expectedEntityId, TODO_ITEM_COMPLETED, false)
                 ))
             );
 
@@ -75,7 +79,7 @@ public class PontificatorTest {
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
             String entityToDelete = "test-entity-id";
             KeyValue<String, Transaction> expected = KeyValue.pair(expectedTransactionId,
-                new Transaction(HashSet.of(Fact.retractEntity(entityToDelete)))
+                new Transaction(HashSet.of(new EntityRetraction(entityToDelete)))
             );
 
             KeyValue<String, Action> input = withRandomKey(new DeleteTodo(entityToDelete));

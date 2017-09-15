@@ -1,7 +1,8 @@
 package fr.hgwood.todomvckafka.actions.todoitem;
 
-import fr.hgwood.todomvckafka.Fact;
 import fr.hgwood.todomvckafka.actions.Action;
+import fr.hgwood.todomvckafka.facts.Fact;
+import fr.hgwood.todomvckafka.facts.ValueAssertion;
 import io.vavr.collection.HashSet;
 import io.vavr.collection.Set;
 import lombok.EqualsAndHashCode;
@@ -21,8 +22,8 @@ public class AddTodo implements Action {
     public Set<Fact> deriveFacts(Supplier<String> entityIdSupplier) {
         String entity = entityIdSupplier.get();
         return HashSet.of(
-            Fact.of(entity, TODO_ITEM_TEXT, this.text),
-            Fact.of(entity, TODO_ITEM_COMPLETED, false)
+            new ValueAssertion(entity, TODO_ITEM_TEXT, this.text),
+            new ValueAssertion(entity, TODO_ITEM_COMPLETED, false)
         );
     }
 }

@@ -2,9 +2,9 @@ package fr.hgwood.todomvckafka.actions;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import fr.hgwood.todomvckafka.Fact;
 import fr.hgwood.todomvckafka.actions.todoitem.AddTodo;
 import fr.hgwood.todomvckafka.actions.todoitem.DeleteTodo;
+import fr.hgwood.todomvckafka.facts.Fact;
 import io.vavr.collection.Set;
 
 import java.util.function.Supplier;
