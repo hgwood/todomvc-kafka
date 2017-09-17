@@ -12,6 +12,7 @@ import fr.hgwood.todomvckafka.support.kafkastreams.TopicInfo;
 import fr.hgwood.todomvckafka.support.kafkastreams.Topology;
 import fr.hgwood.todomvckafka.support.kafkastreams.TopologyTest;
 import io.vavr.collection.HashSet;
+import io.vavr.control.Option;
 import io.vavr.jackson.datatype.VavrModule;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
@@ -20,7 +21,7 @@ import org.junit.Test;
 import static fr.hgwood.todomvckafka.schema.Attribute.TODO_ITEM_COMPLETED;
 import static fr.hgwood.todomvckafka.schema.Attribute.TODO_ITEM_TEXT;
 import static fr.hgwood.todomvckafka.support.kafkastreams.RandomKey.withRandomKey;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class PontificatorTest {
 
@@ -34,6 +35,11 @@ public class PontificatorTest {
         "test-todo-item-topic",
         Serdes.String(),
         new JsonSerde<>(OBJECT_MAPPER, Transaction.class)
+    );
+    private static final TopicInfo<String, Action> IGNORED_ACTIONS = new TopicInfo<>(
+        "test-ignored-action-topic",
+        Serdes.String(),
+        new JsonSerde<>(OBJECT_MAPPER, Action.class)
     );
 
 
@@ -60,14 +66,14 @@ public class PontificatorTest {
 
             KeyValue<String, Action> input = withRandomKey(new AddTodo(expectedText));
             KeyValue<String, Transaction> actual =
-                topologyTest.write(ACTIONS, input).read(TRANSACTIONS);
+                topologyTest.write(ACTIONS, input).read(TRANSACTIONS).get();
 
             assertEquals(expected, actual);
         }
     }
 
     @Test
-    public void deleteAction() throws Exception {
+    public void deletes_an_existing_todo() throws Exception {
         String expectedTransactionId = "test-transaction-id";
         Topology topology =
             new Pontificator(ACTIONS, TRANSACTIONS, () -> expectedTransactionId, () -> null);
@@ -78,11 +84,42 @@ public class PontificatorTest {
                 new Transaction(HashSet.of(new EntityRetraction(entityToDelete)))
             );
 
-            KeyValue<String, Action> input = withRandomKey(new DeleteTodo(entityToDelete));
-            KeyValue<String, Transaction> actual =
-                topologyTest.write(ACTIONS, input).read(TRANSACTIONS);
+            KeyValue<String, Action> add = withRandomKey(new AddTodo("test-todo-item-text"));
+            KeyValue<String, Action> delete = withRandomKey(new DeleteTodo(entityToDelete));
+            KeyValue<String, Transaction> actual = topologyTest
+                .write(ACTIONS, add)
+                .write(ACTIONS, delete)
+                .skip(TRANSACTIONS, 1)
+                .read(TRANSACTIONS)
+                .get();
 
             assertEquals(expected, actual);
+        }
+    }
+
+    @Test
+    public void ignores_delete_action_on_absent_todo() throws Exception {
+        String expectedTransactionId = "test-transaction-id";
+        Topology topology =
+            new Pontificator(ACTIONS, TRANSACTIONS, () -> expectedTransactionId, () -> null);
+
+        try (TopologyTest topologyTest = new TopologyTest(topology)) {
+            String entityToDelete = "test-entity-id";
+            Action expectedIgnoredAction = new DeleteTodo(entityToDelete);
+
+            KeyValue<String, Action> delete = withRandomKey(expectedIgnoredAction);
+            Option<KeyValue<String, Transaction>> transaction =
+                topologyTest.write(ACTIONS, delete).read(TRANSACTIONS);
+            Option<KeyValue<String, Action>> ignoredAction = topologyTest.read(IGNORED_ACTIONS);
+
+            assertFalse("expected no facts to be emitted but there was some",
+                transaction.isDefined()
+            );
+            assertTrue(
+                "expected the action to be ignored but it was not",
+                ignoredAction.isDefined()
+            );
+            assertEquals(expectedIgnoredAction, ignoredAction);
         }
     }
 }

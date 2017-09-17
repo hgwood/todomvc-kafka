@@ -55,7 +55,7 @@ public class EntityGathererTest {
                     expectedText
                 ))));
             KeyValue<String, TodoItem> actual =
-                topologyTest.write(TRANSACTIONS, input).read(TODO_ITEMS);
+                topologyTest.write(TRANSACTIONS, input).read(TODO_ITEMS).get();
 
             assertEquals(expected, actual);
         }
@@ -83,7 +83,7 @@ public class EntityGathererTest {
                     )
                 )));
             KeyValue<String, TodoItem> actual =
-                topologyTest.write(TRANSACTIONS, input).read(TODO_ITEMS);
+                topologyTest.write(TRANSACTIONS, input).read(TODO_ITEMS).get();
 
             assertEquals(expected, actual);
         }
@@ -100,7 +100,7 @@ public class EntityGathererTest {
             KeyValue<String, Transaction> input =
                 withRandomKey(new Transaction(HashSet.of(new EntityRetraction(expectedEntity))));
             KeyValue<String, TodoItem> actual =
-                topologyTest.write(TRANSACTIONS, input).read(TODO_ITEMS);
+                topologyTest.write(TRANSACTIONS, input).read(TODO_ITEMS).get();
 
             assertEquals(expected, actual);
         }

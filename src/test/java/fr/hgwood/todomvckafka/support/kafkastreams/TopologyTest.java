@@ -1,6 +1,6 @@
 package fr.hgwood.todomvckafka.support.kafkastreams;
 
-import org.apache.kafka.clients.producer.ProducerRecord;
+import io.vavr.control.Option;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStreamBuilder;
@@ -40,13 +40,12 @@ public class TopologyTest implements AutoCloseable {
         return this;
     }
 
-    public <K, V> KeyValue<K, V> read(TopicInfo<K, V> todoItems) {
-        ProducerRecord<K, V> record = this.testDriver.readOutput(
+    public <K, V> Option<KeyValue<K, V>> read(TopicInfo<K, V> todoItems) {
+        return Option.of(this.testDriver.readOutput(
             todoItems.getName(),
             todoItems.getKeySerde().deserializer(),
             todoItems.getValueSerde().deserializer()
-        );
-        return KeyValue.pair(record.key(), record.value());
+        )).map(record -> KeyValue.pair(record.key(), record.value()));
     }
 
     public <K, V> TopologyTest skip(TopicInfo<K, V> todoItems, int count) {
