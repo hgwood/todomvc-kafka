@@ -14,7 +14,6 @@ import static fr.hgwood.todomvckafka.schema.Attribute.TODO_ITEM_COMPLETED;
 import static fr.hgwood.todomvckafka.schema.Attribute.TODO_ITEM_TEXT;
 
 @Value
-@EqualsAndHashCode(callSuper = false)
 public class AddTodo implements Action {
     private final String text;
 

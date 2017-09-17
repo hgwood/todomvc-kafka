@@ -11,7 +11,6 @@ import lombok.Value;
 import java.util.function.Supplier;
 
 @Value
-@EqualsAndHashCode(callSuper = false)
 public class DeleteTodo implements Action {
     private final String id;
 
