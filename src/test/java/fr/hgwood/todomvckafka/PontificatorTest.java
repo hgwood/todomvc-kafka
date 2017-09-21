@@ -41,6 +41,11 @@ public class PontificatorTest {
         Serdes.String(),
         new JsonSerde<>(OBJECT_MAPPER, Action.class)
     );
+    private static final TopicInfo<String, Boolean> ENTITY_EXISTS = new TopicInfo<>(
+        "test-entity-exists-store",
+        Serdes.String(),
+        new JsonSerde<>(OBJECT_MAPPER, Boolean.class)
+    );
 
 
     @Test
@@ -48,9 +53,11 @@ public class PontificatorTest {
         String expectedTransactionId = "test-transaction-id";
         String expectedEntityId = "test-entity-id";
         Topology topology = new Pontificator(ACTIONS,
+            IGNORED_ACTIONS,
             TRANSACTIONS,
             () -> expectedTransactionId,
-            () -> expectedEntityId
+            () -> expectedEntityId,
+            ENTITY_EXISTS
         );
 
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
@@ -76,7 +83,7 @@ public class PontificatorTest {
     public void deletes_an_existing_todo() throws Exception {
         String expectedTransactionId = "test-transaction-id";
         Topology topology =
-            new Pontificator(ACTIONS, TRANSACTIONS, () -> expectedTransactionId, () -> null);
+            new Pontificator(ACTIONS, IGNORED_ACTIONS, TRANSACTIONS, () -> expectedTransactionId, () -> "test-entity-id", ENTITY_EXISTS);
 
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
             String entityToDelete = "test-entity-id";
@@ -101,7 +108,7 @@ public class PontificatorTest {
     public void ignores_delete_action_on_absent_todo() throws Exception {
         String expectedTransactionId = "test-transaction-id";
         Topology topology =
-            new Pontificator(ACTIONS, TRANSACTIONS, () -> expectedTransactionId, () -> null);
+            new Pontificator(ACTIONS, IGNORED_ACTIONS, TRANSACTIONS, () -> expectedTransactionId, () -> "test-entity-id", ENTITY_EXISTS);
 
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
             String entityToDelete = "test-entity-id";
@@ -119,7 +126,7 @@ public class PontificatorTest {
                 "expected the action to be ignored but it was not",
                 ignoredAction.isDefined()
             );
-            assertEquals(expectedIgnoredAction, ignoredAction);
+            assertEquals(expectedIgnoredAction, ignoredAction.get().value);
         }
     }
 }
