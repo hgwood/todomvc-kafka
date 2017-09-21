@@ -29,3 +29,9 @@
     - can flat map into facts if necessary
     - transactions need to be in one partition per user
     - makes me think of blockchain : transactions in blocks, but here transactions are facts and blocks are transactions
+- action validation
+  - actions can be of 4 natures
+    - malformed: missing or invalid fields, action is invalid in and of itself
+    - invalid: not applicable to the current state
+    - noop: would not modify the current state
+    - ok: will be applied to the current state
