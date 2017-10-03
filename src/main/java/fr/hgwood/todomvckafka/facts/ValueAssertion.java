@@ -6,7 +6,7 @@ import lombok.Value;
 
 @Value
 public class ValueAssertion<T> implements Fact {
-    private final String entity;
+    private final TemporaryId entity;
     private final Attribute<T> attribute;
     private final T value;
 

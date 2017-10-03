@@ -15,5 +15,5 @@ import java.util.function.Supplier;
     @JsonSubTypes.Type(name = "DELETE_TODO", value = DeleteTodo.class)
 })
 public interface Action {
-    Set<Fact> deriveFacts(Supplier<String> entityIdSupplier);
+    Set<Fact> deriveFacts();
 }

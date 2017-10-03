@@ -6,7 +6,7 @@ import lombok.Value;
 
 @Value
 public class EntityRetraction implements Fact {
-    private final String entity;
+    private final EntityLookup entity;
 
     @Override
     public Map<String, Object> apply(Map<String, Object> entity) {

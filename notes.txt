@@ -35,3 +35,13 @@
     - invalid: not applicable to the current state
     - noop: would not modify the current state
     - ok: will be applied to the current state
+- cannot query existence with entity ids (see Datomic doc)
+  - need temp ids for creation (assertion) and lookups for other operations
+  - types of facts in this new paradigm
+    - assertion: temp id, attr, val
+    - accretion: lookup, attr, val
+    - value retraction: lookup, attr, val
+    - attr retraction: lookup, attr
+    - entity retraction: lookup
+  - after resolve, assertion and accretion are the same
+  - resolving might not succeed because the lookup might not succeed: the action is invalid
