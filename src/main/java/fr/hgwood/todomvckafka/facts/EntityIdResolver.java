@@ -1,9 +1,9 @@
 package fr.hgwood.todomvckafka.facts;
 
-import io.vavr.control.Option;
-import io.vavr.control.Try;
+import io.vavr.control.Either;
 
 public interface EntityIdResolver {
-    Try<Option<EntityId>> resolve(EntityLookup entityLookup);
+    Either<NoSuchEntity, EntityId> resolve(EntityLookup entityLookup);
+
     EntityId resolve(TemporaryEntityId temporaryEntityId);
 }

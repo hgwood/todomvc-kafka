@@ -1,18 +1,17 @@
 package fr.hgwood.todomvckafka.facts;
 
-import io.vavr.control.Option;
-import io.vavr.control.Try;
+import io.vavr.control.Either;
 import lombok.AllArgsConstructor;
 
 import java.util.function.Function;
 
 @AllArgsConstructor
 public class DelegatingEntityIdResolver implements EntityIdResolver {
-    private final Function<EntityLookup, Try<Option<EntityId>>> entityLookupResolver;
+    private final Function<EntityLookup, Either<NoSuchEntity, EntityId>> entityLookupResolver;
     private final Function<TemporaryEntityId, EntityId> temporaryIdEntityIdResolver;
 
     @Override
-    public Try<Option<EntityId>> resolve(EntityLookup entityLookup) {
+    public Either<NoSuchEntity, EntityId> resolve(EntityLookup entityLookup) {
         return entityLookupResolver.apply(entityLookup);
     }
 

@@ -1,17 +1,14 @@
 package fr.hgwood.todomvckafka.facts;
 
-import io.vavr.control.Option;
-import io.vavr.control.Try;
+import io.vavr.control.Either;
 import lombok.Value;
 
 @Value
 public class EntityRetractionRequest implements FactRequest {
-    private final EntityLookup entity;
+    private final EntityLookup entityLookup;
 
     @Override
-    public Try<Option<Fact>> resolveEntity(EntityIdResolver resolver) {
-        return resolver
-            .resolve(entity)
-            .map(maybeEntityId -> maybeEntityId.map(EntityRetraction::new));
+    public Either<NoSuchEntity, Fact> resolveEntity(EntityIdResolver resolver) {
+        return resolver.resolve(entityLookup).map(EntityRetraction::new);
     }
 }
