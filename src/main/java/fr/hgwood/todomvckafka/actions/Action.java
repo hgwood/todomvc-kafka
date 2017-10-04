@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import fr.hgwood.todomvckafka.actions.todoitem.AddTodo;
 import fr.hgwood.todomvckafka.actions.todoitem.DeleteTodo;
 import fr.hgwood.todomvckafka.facts.Fact;
+import fr.hgwood.todomvckafka.facts.FactRequest;
 import io.vavr.collection.Set;
 
 import java.util.function.Supplier;
@@ -15,5 +16,5 @@ import java.util.function.Supplier;
     @JsonSubTypes.Type(name = "DELETE_TODO", value = DeleteTodo.class)
 })
 public interface Action {
-    Set<Fact> deriveFacts();
+    Set<FactRequest> deriveFacts();
 }

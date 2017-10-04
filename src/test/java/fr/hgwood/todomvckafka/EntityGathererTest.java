@@ -3,7 +3,7 @@ package fr.hgwood.todomvckafka;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import fr.hgwood.todomvckafka.facts.EntityRetraction;
-import fr.hgwood.todomvckafka.facts.ValueAssertion;
+import fr.hgwood.todomvckafka.facts.Assertion;
 import fr.hgwood.todomvckafka.support.json.JsonSerde;
 import fr.hgwood.todomvckafka.support.kafkastreams.TopicInfo;
 import fr.hgwood.todomvckafka.support.kafkastreams.Topology;
@@ -50,7 +50,7 @@ public class EntityGathererTest {
                 KeyValue.pair(expectedEntity, new TodoItem(expectedText, null));
 
             KeyValue<String, Transaction> input =
-                withRandomKey(new Transaction(HashSet.of(new ValueAssertion<>(expectedEntity,
+                withRandomKey(new Transaction(HashSet.of(new Assertion<>(expectedEntity,
                     TODO_ITEM_TEXT,
                     expectedText
                 ))));
@@ -73,11 +73,11 @@ public class EntityGathererTest {
                 KeyValue.pair(expectedEntity, new TodoItem(expectedText, expectedCompleted));
 
             KeyValue<String, Transaction> input =
-                withRandomKey(new Transaction(HashSet.of(new ValueAssertion<>(expectedEntity,
+                withRandomKey(new Transaction(HashSet.of(new Assertion<>(expectedEntity,
                         TODO_ITEM_TEXT,
                         expectedText
                     ),
-                    new ValueAssertion<>(expectedEntity,
+                    new Assertion<>(expectedEntity,
                         TODO_ITEM_COMPLETED,
                         expectedCompleted
                     )

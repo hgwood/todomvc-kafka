@@ -6,7 +6,7 @@ import fr.hgwood.todomvckafka.actions.Action;
 import fr.hgwood.todomvckafka.actions.todoitem.AddTodo;
 import fr.hgwood.todomvckafka.actions.todoitem.DeleteTodo;
 import fr.hgwood.todomvckafka.facts.EntityRetraction;
-import fr.hgwood.todomvckafka.facts.ValueAssertion;
+import fr.hgwood.todomvckafka.facts.Assertion;
 import fr.hgwood.todomvckafka.support.json.JsonSerde;
 import fr.hgwood.todomvckafka.support.kafkastreams.TopicInfo;
 import fr.hgwood.todomvckafka.support.kafkastreams.Topology;
@@ -63,11 +63,11 @@ public class PontificatorTest {
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
             String expectedText = "test-todo-item-text";
             KeyValue<String, Transaction> expected = KeyValue.pair(expectedTransactionId,
-                new Transaction(HashSet.of(new ValueAssertion<>(expectedEntityId,
+                new Transaction(HashSet.of(new Assertion<>(expectedEntityId,
                         TODO_ITEM_TEXT,
                         expectedText
                     ),
-                    new ValueAssertion<>(expectedEntityId, TODO_ITEM_COMPLETED, false)
+                    new Assertion<>(expectedEntityId, TODO_ITEM_COMPLETED, false)
                 ))
             );
 

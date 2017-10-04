@@ -6,12 +6,7 @@ import lombok.Value;
 import java.util.UUID;
 
 @Value
-public class EntityLookup implements EntityRef {
+public class EntityLookup {
     private final Attribute<UUID> attribute;
     private final UUID value;
-
-    @Override
-    public EntityId resolve(EntityIdResolver resolver) {
-        return resolver.resolve(this);
-    }
 }

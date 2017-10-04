@@ -7,8 +7,7 @@ import java.util.function.Function;
 @AllArgsConstructor
 public class DelegatingEntityIdResolver implements EntityIdResolver {
     private final Function<EntityLookup, EntityId> entityLookupResolver;
-    private final Function<TemporaryId, EntityId> temporaryIdEntityIdResolver;
-    private final Function<EntityId, EntityId> entityIdResolver;
+    private final Function<TemporaryEntityId, EntityId> temporaryIdEntityIdResolver;
 
     @Override
     public EntityId resolve(EntityLookup entityLookup) {
@@ -16,12 +15,7 @@ public class DelegatingEntityIdResolver implements EntityIdResolver {
     }
 
     @Override
-    public EntityId resolve(TemporaryId temporaryId) {
-        return temporaryIdEntityIdResolver.apply(temporaryId);
-    }
-
-    @Override
-    public EntityId resolve(EntityId entityId) {
-        return entityIdResolver.apply(entityId);
+    public EntityId resolve(TemporaryEntityId temporaryEntityId) {
+        return temporaryIdEntityIdResolver.apply(temporaryEntityId);
     }
 }

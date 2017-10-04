@@ -5,8 +5,8 @@ import io.vavr.collection.Map;
 import lombok.Value;
 
 @Value
-public class EntityRetraction implements Fact {
-    private final EntityLookup entity;
+class EntityRetraction implements Fact {
+    private final EntityId entity;
 
     @Override
     public Map<String, Object> apply(Map<String, Object> entity) {
