@@ -5,7 +5,7 @@ import io.vavr.collection.Map;
 import lombok.Value;
 
 @Value
-class Assertion<T> implements Fact {
+public class Assertion<T> implements Fact {
     private final EntityId entity;
     private final Attribute<T> attribute;
     private final T value;

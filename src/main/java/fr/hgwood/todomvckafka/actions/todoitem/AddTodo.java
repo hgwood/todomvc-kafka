@@ -1,6 +1,7 @@
 package fr.hgwood.todomvckafka.actions.todoitem;
 
 import fr.hgwood.todomvckafka.actions.Action;
+import fr.hgwood.todomvckafka.actions.ActionVisitor;
 import fr.hgwood.todomvckafka.facts.*;
 import io.vavr.collection.HashSet;
 import io.vavr.collection.Set;
@@ -14,11 +15,7 @@ public class AddTodo implements Action {
     private final String text;
 
     @Override
-    public Set<FactRequest> deriveFacts() {
-        TemporaryEntityId temporaryEntityId = new TemporaryEntityId("new-todo");
-        return HashSet.of(
-            new AssertionRequest<>(temporaryEntityId, TODO_ITEM_TEXT, this.text),
-            new AssertionRequest<>(temporaryEntityId, TODO_ITEM_COMPLETED, false)
-        );
+    public <R> R accept(ActionVisitor<R> visitor) {
+        return visitor.visit(this);
     }
 }

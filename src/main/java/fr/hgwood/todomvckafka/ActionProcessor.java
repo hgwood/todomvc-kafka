@@ -1,6 +1,7 @@
 package fr.hgwood.todomvckafka;
 
 import fr.hgwood.todomvckafka.actions.Action;
+import fr.hgwood.todomvckafka.actions.DeriveFacts;
 import fr.hgwood.todomvckafka.actions.InvalidAction;
 import fr.hgwood.todomvckafka.facts.DelegatingEntityIdResolver;
 import fr.hgwood.todomvckafka.facts.EntityId;
@@ -35,21 +36,18 @@ public class ActionProcessor extends AbstractProcessor<String, Action> {
     public void init(ProcessorContext context) {
         super.init(context);
         this.entityExistsStore =
-            (KeyValueStore<String, Boolean>) context.getStateStore(entityExistsStoreName);
+            (KeyValueStore<EntityId, EntityId>) context.getStateStore(entityExistsStoreName);
     }
 
     @Override
     public void process(String key, Action action) {
         Set<Try<Option<Fact>>> f = action
-            .deriveFacts()
+            .accept(new DeriveFacts())
             .map(factRequest -> factRequest.resolveEntity(new DelegatingEntityIdResolver(
-                entityLookup -> {
-                    return Try.of(() -> {
-                        return Option.of(entityExistsStore.get(new EntityId(entityLookup.getValue())));
-                    });
-                },
+                entityLookup -> Try.of(() -> Option.of(entityExistsStore.get(new EntityId(
+                    entityLookup.getValue())))),
                 Function1.<TemporaryEntityId, EntityId>of(temporaryEntityId -> {
-                    EntityId entityId = new EntityId(UUID.randomUUID());
+                    EntityId entityId = new EntityId(UUID.randomUUID().toString());
                     entityExistsStore.put(entityId, entityId);
                     return entityId;
                 }).memoized()
@@ -58,16 +56,13 @@ public class ActionProcessor extends AbstractProcessor<String, Action> {
             .map(tryOptionFact -> tryOptionFact.flatMap(Value::toTry))
             .map(tryFact -> Validation.fromEither(tryFact.toEither()))
             .map(validationFact -> validationFact.mapError(List::of)));
-        Validation<InvalidAction, Transaction> vv =
-            v.bimap(errors -> new InvalidAction(action, errors),
-                facts -> new Transaction(HashSet.ofAll(facts))
-            );
+        Validation<InvalidAction, Transaction> vv = v.bimap(
+            errors -> new InvalidAction(action, errors),
+            facts -> new Transaction(HashSet.ofAll(facts))
+        );
 
-        if (vv.isValid()) {
-            entityExistsStore.
-        }
-
-        this.context().forward(transactionIdSupplier.get(),
+        this.context().forward(
+            transactionIdSupplier.get(),
             vv.isValid() ? vv.get() : vv.getError(),
             vv.isValid() ? 0 : 1
         );

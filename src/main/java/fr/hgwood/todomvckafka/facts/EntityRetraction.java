@@ -5,7 +5,7 @@ import io.vavr.collection.Map;
 import lombok.Value;
 
 @Value
-class EntityRetraction implements Fact {
+public class EntityRetraction implements Fact {
     private final EntityId entity;
 
     @Override

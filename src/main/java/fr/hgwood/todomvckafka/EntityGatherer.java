@@ -35,10 +35,13 @@ public class EntityGatherer implements Topology {
     }
 
     private Map<String, Map> mergeFacts(Set<Fact> facts) {
-        return facts.groupBy(Fact::getEntity).mapValues(entityFacts -> entityFacts.foldLeft(
-            (Map<String, Object>) HashMap.<String, Object>empty(),
-            (fields, fact) -> fact.apply(fields)
-        )).mapValues(fields -> fields.isEmpty() ? null : fields);
+        return facts
+            .groupBy(fact -> fact.getEntity().getValue())
+            .mapValues(entityFacts -> entityFacts.foldLeft(
+                (Map<String, Object>) HashMap.<String, Object>empty(),
+                (fields, fact) -> fact.apply(fields)
+            ))
+            .mapValues(fields -> fields.isEmpty() ? null : fields);
     }
 
 }

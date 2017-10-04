@@ -2,6 +2,7 @@ package fr.hgwood.todomvckafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import fr.hgwood.todomvckafka.facts.EntityId;
 import fr.hgwood.todomvckafka.facts.EntityRetraction;
 import fr.hgwood.todomvckafka.facts.Assertion;
 import fr.hgwood.todomvckafka.support.json.JsonSerde;
@@ -33,9 +34,9 @@ public class EntityGathererTest {
         Serdes.String(),
         new JsonSerde<>(OBJECT_MAPPER, Map.class)
     );
-    private static final TopicInfo<String, TodoItem> TODO_ITEMS = new TopicInfo<>(
+    private static final TopicInfo<EntityId, TodoItem> TODO_ITEMS = new TopicInfo<>(
         "test-todo-item-topic",
-        Serdes.String(),
+        new JsonSerde<>(OBJECT_MAPPER, EntityId.class),
         new JsonSerde<>(OBJECT_MAPPER, TodoItem.class)
     );
 
@@ -44,9 +45,9 @@ public class EntityGathererTest {
         Topology topology = new EntityGatherer(TRANSACTIONS, ENTITIES);
 
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
-            String expectedEntity = "test-entity-id";
+            EntityId expectedEntity = new EntityId("test-entity-id");
             String expectedText = "test-todo-item-text-value";
-            KeyValue<String, TodoItem> expected =
+            KeyValue<EntityId, TodoItem> expected =
                 KeyValue.pair(expectedEntity, new TodoItem(expectedText, null));
 
             KeyValue<String, Transaction> input =
@@ -54,7 +55,7 @@ public class EntityGathererTest {
                     TODO_ITEM_TEXT,
                     expectedText
                 ))));
-            KeyValue<String, TodoItem> actual =
+            KeyValue<EntityId, TodoItem> actual =
                 topologyTest.write(TRANSACTIONS, input).read(TODO_ITEMS).get();
 
             assertEquals(expected, actual);
@@ -66,10 +67,10 @@ public class EntityGathererTest {
         Topology topology = new EntityGatherer(TRANSACTIONS, ENTITIES);
 
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
-            String expectedEntity = "test-entity-id";
+            EntityId expectedEntity = new EntityId("test-entity-id");
             String expectedText = "test-todo-item-text-value";
             Boolean expectedCompleted = true;
-            KeyValue<String, TodoItem> expected =
+            KeyValue<EntityId, TodoItem> expected =
                 KeyValue.pair(expectedEntity, new TodoItem(expectedText, expectedCompleted));
 
             KeyValue<String, Transaction> input =
@@ -82,7 +83,7 @@ public class EntityGathererTest {
                         expectedCompleted
                     )
                 )));
-            KeyValue<String, TodoItem> actual =
+            KeyValue<EntityId, TodoItem> actual =
                 topologyTest.write(TRANSACTIONS, input).read(TODO_ITEMS).get();
 
             assertEquals(expected, actual);
@@ -94,12 +95,12 @@ public class EntityGathererTest {
         Topology topology = new EntityGatherer(TRANSACTIONS, ENTITIES);
 
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
-            String expectedEntity = "test-entity-id";
-            KeyValue<String, TodoItem> expected = KeyValue.pair(expectedEntity, null);
+            EntityId expectedEntity = new EntityId("test-entity-id");
+            KeyValue<EntityId, TodoItem> expected = KeyValue.pair(expectedEntity, null);
 
             KeyValue<String, Transaction> input =
                 withRandomKey(new Transaction(HashSet.of(new EntityRetraction(expectedEntity))));
-            KeyValue<String, TodoItem> actual =
+            KeyValue<EntityId, TodoItem> actual =
                 topologyTest.write(TRANSACTIONS, input).read(TODO_ITEMS).get();
 
             assertEquals(expected, actual);

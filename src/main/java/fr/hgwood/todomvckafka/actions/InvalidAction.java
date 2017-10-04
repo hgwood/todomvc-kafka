@@ -1,6 +1,9 @@
 package fr.hgwood.todomvckafka.actions;
 
+import lombok.Value;
+
+@Value
 public class InvalidAction {
-    public InvalidAction(Action action, Iterable<Throwable> errors) {
-    }
+    private final Action action;
+    private final Iterable<Throwable> errors;
 }

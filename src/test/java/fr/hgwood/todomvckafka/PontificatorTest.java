@@ -3,8 +3,10 @@ package fr.hgwood.todomvckafka;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import fr.hgwood.todomvckafka.actions.Action;
+import fr.hgwood.todomvckafka.actions.InvalidAction;
 import fr.hgwood.todomvckafka.actions.todoitem.AddTodo;
 import fr.hgwood.todomvckafka.actions.todoitem.DeleteTodo;
+import fr.hgwood.todomvckafka.facts.EntityId;
 import fr.hgwood.todomvckafka.facts.EntityRetraction;
 import fr.hgwood.todomvckafka.facts.Assertion;
 import fr.hgwood.todomvckafka.support.json.JsonSerde;
@@ -14,6 +16,7 @@ import fr.hgwood.todomvckafka.support.kafkastreams.TopologyTest;
 import io.vavr.collection.HashSet;
 import io.vavr.control.Option;
 import io.vavr.jackson.datatype.VavrModule;
+import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KeyValue;
 import org.junit.Test;
@@ -27,6 +30,7 @@ public class PontificatorTest {
 
     private static final ObjectMapper OBJECT_MAPPER =
         new ObjectMapper().registerModule(new VavrModule()).registerModule(new JavaTimeModule());
+    private static final Serde<EntityId> ENTITY_ID_SERDE = new JsonSerde<>(OBJECT_MAPPER, EntityId.class);
     private static final TopicInfo<String, Action> ACTIONS = new TopicInfo<>("test-actions-topic",
         Serdes.String(),
         new JsonSerde<>(OBJECT_MAPPER, Action.class)
@@ -36,27 +40,27 @@ public class PontificatorTest {
         Serdes.String(),
         new JsonSerde<>(OBJECT_MAPPER, Transaction.class)
     );
-    private static final TopicInfo<String, Action> IGNORED_ACTIONS = new TopicInfo<>(
+    private static final TopicInfo<String, InvalidAction> IGNORED_ACTIONS = new TopicInfo<>(
         "test-ignored-action-topic",
         Serdes.String(),
-        new JsonSerde<>(OBJECT_MAPPER, Action.class)
+        new JsonSerde<>(OBJECT_MAPPER, InvalidAction.class)
     );
-    private static final TopicInfo<String, Boolean> ENTITY_EXISTS = new TopicInfo<>(
+    private static final TopicInfo<EntityId, EntityId> ENTITY_EXISTS = new TopicInfo<>(
         "test-entity-exists-store",
-        Serdes.String(),
-        new JsonSerde<>(OBJECT_MAPPER, Boolean.class)
+        ENTITY_ID_SERDE,
+        ENTITY_ID_SERDE
     );
 
 
     @Test
     public void addAction() throws Exception {
         String expectedTransactionId = "test-transaction-id";
-        String expectedEntityId = "test-entity-id";
+        EntityId expectedEntityId = new EntityId("test-entity-id");
         Topology topology = new Pontificator(ACTIONS,
             IGNORED_ACTIONS,
             TRANSACTIONS,
             () -> expectedTransactionId,
-            () -> expectedEntityId,
+            () -> expectedEntityId.toString(),
             ENTITY_EXISTS
         );
 
@@ -86,13 +90,13 @@ public class PontificatorTest {
             new Pontificator(ACTIONS, IGNORED_ACTIONS, TRANSACTIONS, () -> expectedTransactionId, () -> "test-entity-id", ENTITY_EXISTS);
 
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
-            String entityToDelete = "test-entity-id";
+            EntityId entityToDelete = new EntityId("test-entity-id");
             KeyValue<String, Transaction> expected = KeyValue.pair(expectedTransactionId,
                 new Transaction(HashSet.of(new EntityRetraction(entityToDelete)))
             );
 
             KeyValue<String, Action> add = withRandomKey(new AddTodo("test-todo-item-text"));
-            KeyValue<String, Action> delete = withRandomKey(new DeleteTodo(entityToDelete));
+            KeyValue<String, Action> delete = withRandomKey(new DeleteTodo(entityToDelete.getValue()));
             KeyValue<String, Transaction> actual = topologyTest
                 .write(ACTIONS, add)
                 .write(ACTIONS, delete)
@@ -117,7 +121,7 @@ public class PontificatorTest {
             KeyValue<String, Action> delete = withRandomKey(expectedIgnoredAction);
             Option<KeyValue<String, Transaction>> transaction =
                 topologyTest.write(ACTIONS, delete).read(TRANSACTIONS);
-            Option<KeyValue<String, Action>> ignoredAction = topologyTest.read(IGNORED_ACTIONS);
+            Option<KeyValue<String, InvalidAction>> ignoredAction = topologyTest.read(IGNORED_ACTIONS);
 
             assertFalse("expected no facts to be emitted but there was some",
                 transaction.isDefined()

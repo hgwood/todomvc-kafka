@@ -16,6 +16,5 @@ import java.util.function.Supplier;
     @JsonSubTypes.Type(name = "DELETE_TODO", value = DeleteTodo.class)
 })
 public interface Action {
-    Set<FactRequest> deriveFacts();
     <R> R accept(ActionVisitor<R> visitor);
 }

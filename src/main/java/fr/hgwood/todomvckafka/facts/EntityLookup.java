@@ -7,6 +7,6 @@ import java.util.UUID;
 
 @Value
 public class EntityLookup {
-    private final Attribute<UUID> attribute;
-    private final UUID value;
+    private final Attribute<String> attribute;
+    private final String value;
 }

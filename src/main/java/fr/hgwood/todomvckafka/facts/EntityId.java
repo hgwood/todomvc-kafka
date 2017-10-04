@@ -6,5 +6,5 @@ import java.util.UUID;
 
 @Value
 public class EntityId {
-    private final UUID value;
+    private final String value;
 }

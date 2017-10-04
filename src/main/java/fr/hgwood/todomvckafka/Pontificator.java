@@ -1,6 +1,8 @@
 package fr.hgwood.todomvckafka;
 
 import fr.hgwood.todomvckafka.actions.Action;
+import fr.hgwood.todomvckafka.actions.InvalidAction;
+import fr.hgwood.todomvckafka.facts.EntityId;
 import fr.hgwood.todomvckafka.support.kafkastreams.TopicInfo;
 import fr.hgwood.todomvckafka.support.kafkastreams.Topology;
 import lombok.AllArgsConstructor;
@@ -20,11 +22,11 @@ public class Pontificator implements Topology {
     private static final String IGNORED_ACTIONS_SINK = "ignored-actions-sink";
 
     private final TopicInfo<String, Action> actions;
-    private final TopicInfo<String, Action> ignoredActions;
+    private final TopicInfo<String, InvalidAction> ignoredActions;
     private final TopicInfo<String, Transaction> transactions;
     private final Supplier<String> transactionIdSupplier;
     private final Supplier<String> entityIdSupplier;
-    private final TopicInfo<String, Boolean> entityExistsStoreInfo;
+    private final TopicInfo<EntityId, EntityId> entityExistsStoreInfo;
 
     @Override
     public void build(KStreamBuilder builder) {
