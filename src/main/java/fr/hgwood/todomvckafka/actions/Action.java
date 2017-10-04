@@ -17,4 +17,5 @@ import java.util.function.Supplier;
 })
 public interface Action {
     Set<FactRequest> deriveFacts();
+    <R> R accept(ActionVisitor<R> visitor);
 }

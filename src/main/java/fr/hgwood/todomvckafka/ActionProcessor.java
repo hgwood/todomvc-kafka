@@ -29,7 +29,7 @@ public class ActionProcessor extends AbstractProcessor<String, Action> {
     private final String entityExistsStoreName;
     private final Supplier<String> transactionIdSupplier;
     private final Supplier<String> entityIdSupplier;
-    private KeyValueStore<String, Boolean> entityExistsStore;
+    private KeyValueStore<EntityId, EntityId> entityExistsStore;
 
     @Override
     public void init(ProcessorContext context) {
@@ -45,7 +45,7 @@ public class ActionProcessor extends AbstractProcessor<String, Action> {
             .map(factRequest -> factRequest.resolveEntity(new DelegatingEntityIdResolver(
                 entityLookup -> {
                     return Try.of(() -> {
-                        return Option.of(entityExistsStore.get(entityLookup.getValue()));
+                        return Option.of(entityExistsStore.get(new EntityId(entityLookup.getValue())));
                     });
                 },
                 Function1.<TemporaryEntityId, EntityId>of(temporaryEntityId -> {
