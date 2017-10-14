@@ -1,9 +1,9 @@
 package fr.hgwood.todomvckafka.facts;
 
 public interface FactRequestVisitor<T> {
-    T visit(AssertionRequest factRequest);
+    <R> T visit(AssertionRequest<R> factRequest);
 
-    T visit(AccretionRequest factRequest);
+    <R> T visit(AccretionRequest<R> factRequest);
 
     T visit(EntityRetractionRequest factRequest);
 }

@@ -1,12 +1,8 @@
 package fr.hgwood.todomvckafka.facts;
 
-import fr.hgwood.todomvckafka.support.kafkastreams.RandomKey;
-import io.vavr.Function1;
 import io.vavr.control.Option;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.streams.state.KeyValueStore;
-
-import java.util.function.Supplier;
 
 @RequiredArgsConstructor
 public class EntityExistenceBuilder2 implements FactRequestVisitor<Option<Fact>> {
@@ -14,7 +10,7 @@ public class EntityExistenceBuilder2 implements FactRequestVisitor<Option<Fact>>
     private final KeyValueStore<EntityId, EntityId> entityExistsStore;
 
     @Override
-    public Option<Fact> visit(AssertionRequest factRequest) {
+    public <R> Option<Fact> visit(AssertionRequest<R> factRequest) {
         EntityId entityId = new EntityId(factRequest.getTemporaryEntityId().getValue());
         entityExistsStore.put(entityId, entityId);
         Fact fact = new Assertion<>(entityId, factRequest.getAttribute(), factRequest.getValue());
@@ -22,7 +18,7 @@ public class EntityExistenceBuilder2 implements FactRequestVisitor<Option<Fact>>
     }
 
     @Override
-    public Option<Fact> visit(AccretionRequest factRequest) {
+    public <R> Option<Fact> visit(AccretionRequest<R> factRequest) {
         EntityId entityId = new EntityId(factRequest.getEntityLookup().getValue());
         return Option
             .of(entityExistsStore.get(entityId))
@@ -35,8 +31,6 @@ public class EntityExistenceBuilder2 implements FactRequestVisitor<Option<Fact>>
     @Override
     public Option<Fact> visit(EntityRetractionRequest factRequest) {
         EntityId entityId = new EntityId(factRequest.getEntityLookup().getValue());
-        return Option
-            .of(entityExistsStore.get(entityId))
-            .map(entityId1 -> new EntityRetraction(entityId1));
+        return Option.of(entityExistsStore.get(entityId)).map(EntityRetraction::new);
     }
 }
