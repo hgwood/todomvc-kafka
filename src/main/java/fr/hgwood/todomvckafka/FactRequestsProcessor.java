@@ -28,7 +28,6 @@ public class FactRequestsProcessor extends AbstractProcessor<String, FactRequest
         FactRequestVisitor<Option<Fact>> visitor = new EntityExistenceBuilder2(this.entityExistsStore);
         Set<Option<Fact>> facts = value.getTransaction().getFacts().map(factRequest -> factRequest.accept(visitor));
         Option<Seq<Fact>> result = Option.sequence(facts);
-        //Option<Transaction<Fact>> transaction = result.map(facts1 -> new Transaction<>(HashSet.ofAll(facts1)));
         if (result.isDefined()) {
             FactTransaction transaction = new FactTransaction(new Transaction<>(HashSet.ofAll(result.get())));
             this.context().forward(key, transaction, 0);
