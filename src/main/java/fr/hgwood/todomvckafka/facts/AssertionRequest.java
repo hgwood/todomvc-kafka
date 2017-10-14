@@ -15,4 +15,9 @@ public class AssertionRequest<T> implements FactRequest {
     public Either<NoSuchEntity, Fact> resolveEntity(EntityIdResolver resolver) {
         return Either.right(new Assertion<>(resolver.resolve(temporaryEntityId), attribute, value));
     }
+
+    @Override
+    public <R> R accept(FactRequestVisitor<R> visitor) {
+        return visitor.visit(this);
+    }
 }

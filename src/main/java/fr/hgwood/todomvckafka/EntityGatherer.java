@@ -12,11 +12,11 @@ import static fr.hgwood.todomvckafka.support.kafkastreams.ConvertFromVavr.toKeyV
 
 public class EntityGatherer implements Topology {
 
-    private final TopicInfo<String, Transaction> transactions;
-    private final TopicInfo<String, Map> entities;
+    private final TopicInfo<String, Transaction<Fact>> transactions;
+    private final TopicInfo<String, Map<String, Object>> entities;
 
     public EntityGatherer(
-        TopicInfo<String, Transaction> transactions, TopicInfo<String, Map> entities
+        TopicInfo<String, Transaction<Fact>> transactions, TopicInfo<String, Map<String, Object>> entities
     ) {
         this.transactions = transactions;
         this.entities = entities;
@@ -34,7 +34,7 @@ public class EntityGatherer implements Topology {
             .to(entities.getKeySerde(), entities.getValueSerde(), entities.getName());
     }
 
-    private Map<String, Map> mergeFacts(Set<Fact> facts) {
+    private Map<String, Map<String, Object>> mergeFacts(Set<Fact> facts) {
         return facts
             .groupBy(fact -> fact.getEntity().getValue())
             .mapValues(entityFacts -> entityFacts.foldLeft(

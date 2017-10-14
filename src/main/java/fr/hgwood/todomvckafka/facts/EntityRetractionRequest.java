@@ -11,4 +11,9 @@ public class EntityRetractionRequest implements FactRequest {
     public Either<NoSuchEntity, Fact> resolveEntity(EntityIdResolver resolver) {
         return resolver.resolve(entityLookup).map(EntityRetraction::new);
     }
+
+    @Override
+    public <R> R accept(FactRequestVisitor<R> visitor) {
+        return visitor.visit(this);
+    }
 }

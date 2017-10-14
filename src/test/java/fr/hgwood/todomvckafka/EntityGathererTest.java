@@ -1,11 +1,14 @@
 package fr.hgwood.todomvckafka;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import fr.hgwood.todomvckafka.facts.EntityId;
 import fr.hgwood.todomvckafka.facts.EntityRetraction;
 import fr.hgwood.todomvckafka.facts.Assertion;
+import fr.hgwood.todomvckafka.facts.Fact;
 import fr.hgwood.todomvckafka.support.json.JsonSerde;
+import fr.hgwood.todomvckafka.support.json.JsonSerde2;
 import fr.hgwood.todomvckafka.support.kafkastreams.TopicInfo;
 import fr.hgwood.todomvckafka.support.kafkastreams.Topology;
 import fr.hgwood.todomvckafka.support.kafkastreams.TopologyTest;
@@ -25,14 +28,14 @@ public class EntityGathererTest {
 
     private static final ObjectMapper OBJECT_MAPPER =
         new ObjectMapper().registerModule(new VavrModule()).registerModule(new JavaTimeModule());
-    private static final TopicInfo<String, Transaction> TRANSACTIONS = new TopicInfo<>(
+    private static final TopicInfo<String, Transaction<Fact>> TRANSACTIONS = new TopicInfo<>(
         "test-transactions-topic",
         Serdes.String(),
-        new JsonSerde<>(OBJECT_MAPPER, Transaction.class)
+        new JsonSerde2<>(OBJECT_MAPPER, new TypeReference<Transaction<Fact>>() {})
     );
-    private static final TopicInfo<String, Map> ENTITIES = new TopicInfo<>("test-todo-item-topic",
+    private static final TopicInfo<String, Map<String, Object>> ENTITIES = new TopicInfo<>("test-todo-item-topic",
         Serdes.String(),
-        new JsonSerde<>(OBJECT_MAPPER, Map.class)
+        new JsonSerde2<>(OBJECT_MAPPER, new TypeReference<Map<String, Object>>() {})
     );
     private static final TopicInfo<EntityId, TodoItem> TODO_ITEMS = new TopicInfo<>(
         "test-todo-item-topic",
@@ -50,8 +53,8 @@ public class EntityGathererTest {
             KeyValue<EntityId, TodoItem> expected =
                 KeyValue.pair(expectedEntity, new TodoItem(expectedText, null));
 
-            KeyValue<String, Transaction> input =
-                withRandomKey(new Transaction(HashSet.of(new Assertion<>(expectedEntity,
+            KeyValue<String, Transaction<Fact>> input =
+                withRandomKey(new Transaction<Fact>(HashSet.of(new Assertion<>(expectedEntity,
                     TODO_ITEM_TEXT,
                     expectedText
                 ))));
@@ -73,8 +76,8 @@ public class EntityGathererTest {
             KeyValue<EntityId, TodoItem> expected =
                 KeyValue.pair(expectedEntity, new TodoItem(expectedText, expectedCompleted));
 
-            KeyValue<String, Transaction> input =
-                withRandomKey(new Transaction(HashSet.of(new Assertion<>(expectedEntity,
+            KeyValue<String, Transaction<Fact>> input =
+                withRandomKey(new Transaction<Fact>(HashSet.of(new Assertion<>(expectedEntity,
                         TODO_ITEM_TEXT,
                         expectedText
                     ),
@@ -98,8 +101,8 @@ public class EntityGathererTest {
             EntityId expectedEntity = new EntityId("test-entity-id");
             KeyValue<EntityId, TodoItem> expected = KeyValue.pair(expectedEntity, null);
 
-            KeyValue<String, Transaction> input =
-                withRandomKey(new Transaction(HashSet.of(new EntityRetraction(expectedEntity))));
+            KeyValue<String, Transaction<Fact>> input =
+                withRandomKey(new Transaction<Fact>(HashSet.of(new EntityRetraction(expectedEntity))));
             KeyValue<EntityId, TodoItem> actual =
                 topologyTest.write(TRANSACTIONS, input).read(TODO_ITEMS).get();
 

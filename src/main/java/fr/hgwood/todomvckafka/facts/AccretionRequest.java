@@ -17,4 +17,9 @@ public class AccretionRequest<T> implements FactRequest {
             .resolve(entityLookup)
             .map(entityId -> new Assertion<>(entityId, attribute, value));
     }
+
+    @Override
+    public <R> R accept(FactRequestVisitor<R> visitor) {
+        return visitor.visit(this);
+    }
 }
