@@ -55,7 +55,7 @@ public class Transactor extends AbstractProcessor<String, Action> implements Act
             );
         } else {
             this.context().forward(key,
-                new RejectedAction(action, RejectionMessages.entityDoesNotExist(action.getId())),
+                new RejectedAction(action, RejectionMessages.unknownEntity(action.getId())),
                 rejectedActionsChildName
             );
         }
@@ -67,10 +67,10 @@ public class Transactor extends AbstractProcessor<String, Action> implements Act
     }
 
     public static class RejectionMessages {
-        private static final String ENTITY_DOES_NOT_EXIST = "entity '%s' does not exist";
+        private static final String UNKNOWN_ENTITY = "entity '%s' is unknown";
 
-        public static String entityDoesNotExist(String entity) {
-            return format(ENTITY_DOES_NOT_EXIST, entity);
+        public static String unknownEntity(String entity) {
+            return format(UNKNOWN_ENTITY, entity);
         }
     }
 }

@@ -43,7 +43,7 @@ public class TransactorTopologyTest {
         new TopicInfo<>("test-known-entities-store", Serdes.String(), Serdes.String());
 
     @Test
-    public void add_a_todo_then_delete_it() {
+    public void add_a_todo_then_delete_it_yields_a_retraction_of_the_added_todo() {
         Topology topology =
             new TransactorTopology(ACTIONS, TRANSACTIONS, REJECTED_ACTIONS, KNOWN_ENTITIES);
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
@@ -75,7 +75,7 @@ public class TransactorTopologyTest {
     }
 
     @Test
-    public void delete_a_todo_that_does_not_exist() {
+    public void delete_a_todo_that_does_not_exist_yields_an_unknown_entity_error() {
         Topology topology =
             new TransactorTopology(ACTIONS, TRANSACTIONS, REJECTED_ACTIONS, KNOWN_ENTITIES);
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
@@ -99,8 +99,8 @@ public class TransactorTopologyTest {
                 deleteTodo,
                 rejectedDeleteTodo.get().getAction()
             );
-            assertEquals("expected rejection reason to be ENTITY_DOES_NOT_EXISTS but it was not",
-                Transactor.RejectionMessages.entityDoesNotExist(deleteTodo.getId()),
+            assertEquals("expected rejection reason to be UNKNOWN_ENTITY but it was not",
+                Transactor.RejectionMessages.unknownEntity(deleteTodo.getId()),
                 rejectedDeleteTodo.get().getReason()
             );
         }
