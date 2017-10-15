@@ -3,7 +3,8 @@ package fr.hgwood.todomvckafka2.actions;
 import lombok.Value;
 
 @Value
-public class AddTodo implements Action {
+public class EditTodo implements Action {
+    private final String id;
     private final String text;
 
     @Override

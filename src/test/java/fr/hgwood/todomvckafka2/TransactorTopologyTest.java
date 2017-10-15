@@ -1,10 +1,8 @@
 package fr.hgwood.todomvckafka2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fr.hgwood.todomvckafka2.actions.Action;
-import fr.hgwood.todomvckafka2.actions.AddTodo;
-import fr.hgwood.todomvckafka2.actions.DeleteTodo;
-import fr.hgwood.todomvckafka2.actions.RejectedAction;
+import fr.hgwood.todomvckafka2.actions.*;
+import fr.hgwood.todomvckafka2.facts.Assertion;
 import fr.hgwood.todomvckafka2.facts.EntityRetraction;
 import fr.hgwood.todomvckafka2.facts.Transaction;
 import fr.hgwood.todomvckafka2.reducers.Transactor;
@@ -71,6 +69,38 @@ public class TransactorTopologyTest {
                 .exists(fact -> fact instanceof EntityRetraction && fact
                     .getEntity()
                     .equals(addedTodoId)));
+        }
+    }
+
+    @Test
+    public void add_a_todo_then_edit_it_yields_a_todo_with_updated_text() {
+        Topology topology =
+            new TransactorTopology(ACTIONS, TRANSACTIONS, REJECTED_ACTIONS, KNOWN_ENTITIES);
+        try (TopologyTest topologyTest = new TopologyTest(topology)) {
+            AddTodo addTodo = new AddTodo("test-add-todo-text");
+            Option<Transaction> addTodoTransaction = topologyTest
+                .write(ACTIONS, withRandomKey(addTodo))
+                .read(TRANSACTIONS)
+                .map(kv -> kv.value);
+
+            assertTrue(
+                "expected ADD_TODO to succeed but it did not",
+                addTodoTransaction.isDefined()
+            );
+
+            String addedTodoId =
+                addTodoTransaction.get().getFacts().find(fact -> true).get().getEntity();
+            EditTodo editTodo = new EditTodo(addedTodoId, "test-edit-todo-text");
+            Transaction deleteTodoTransaction = topologyTest
+                .write(ACTIONS, withRandomKey(editTodo))
+                .read(TRANSACTIONS)
+                .get().value;
+
+            assertTrue(deleteTodoTransaction
+                .getFacts()
+                .exists(fact -> fact instanceof Assertion && fact
+                    .getEntity()
+                    .equals(addedTodoId) && ((Assertion) fact).getValue().equals(editTodo.getText())));
         }
     }
 

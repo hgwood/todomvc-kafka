@@ -6,6 +6,7 @@ import fr.hgwood.todomvckafka2.facts.EntityRetraction;
 import fr.hgwood.todomvckafka2.facts.Transaction;
 import fr.hgwood.todomvckafka2.schema.Attribute;
 import io.vavr.collection.HashSet;
+import io.vavr.collection.Set;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.streams.processor.AbstractProcessor;
 import org.apache.kafka.streams.processor.ProcessorContext;
@@ -47,6 +48,24 @@ public class Transactor extends AbstractProcessor<String, Action> implements Act
     }
 
     @Override
+    public void process(String key, EditTodo action) {
+        if (this.knownEntities.get(action.getId()) != null) {
+            this.context().forward(randomKey(),
+                new Transaction(HashSet.of(new Assertion<>(action.getId(),
+                    Attribute.TODO_ITEM_TEXT,
+                    action.getText()
+                ))),
+                transactionsChildName
+            );
+        } else {
+            this.context().forward(key,
+                new RejectedAction(action, RejectionMessages.unknownEntity(action.getId())),
+                rejectedActionsChildName
+            );
+        }
+    }
+
+    @Override
     public void process(String key, DeleteTodo action) {
         if (this.knownEntities.get(action.getId()) != null) {
             this.context().forward(randomKey(),
@@ -59,6 +78,23 @@ public class Transactor extends AbstractProcessor<String, Action> implements Act
                 rejectedActionsChildName
             );
         }
+    }
+
+    @Override
+    public void process(String key, CompleteAll action) {
+        Set<String> knownEntitiesSnapshot = HashSet.empty();
+        this.knownEntities.all().forEachRemaining(kv -> {
+            knownEntitiesSnapshot.add(kv.key);
+        });
+        this
+            .context()
+            .forward(
+                randomKey(),
+                new Transaction(knownEntitiesSnapshot.map(entity -> new Assertion<>(entity,
+                    Attribute.TODO_ITEM_COMPLETED,
+                    true
+                )))
+            );
     }
 
     @Override

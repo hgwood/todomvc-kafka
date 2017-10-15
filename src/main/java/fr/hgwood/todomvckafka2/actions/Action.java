@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
     @JsonSubTypes.Type(name = "ADD_TODO", value = AddTodo.class),
+    @JsonSubTypes.Type(name = "EDIT_TODO", value = EditTodo.class),
     @JsonSubTypes.Type(name = "DELETE_TODO", value = DeleteTodo.class)
 })
 public interface Action {
