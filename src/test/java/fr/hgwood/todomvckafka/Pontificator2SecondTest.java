@@ -97,7 +97,7 @@ public class Pontificator2SecondTest {
         try (TopologyTest topologyTest = new TopologyTest(topology)) {
             EntityId entityToDelete = new EntityId("test-entity-id");
             KeyValue<String, FactTransaction> expected = KeyValue.pair(expectedTransactionId,
-                new FactTransaction(new Transaction(HashSet.of(new EntityRetraction(entityToDelete))))
+                new FactTransaction(new Transaction<>(HashSet.of(new EntityRetraction(entityToDelete))))
             );
 
             KeyValue<String, Action> add = withRandomKey(new AddTodo("test-todo-item-text"));

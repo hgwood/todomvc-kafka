@@ -31,7 +31,8 @@
     - makes me think of blockchain : transactions in blocks, but here transactions are facts and blocks are transactions
 - action validation
   - actions can be of 4 natures
-    - malformed: missing or invalid fields, action is invalid in and of itself
+    - malformed: cannot deserialize, missing or invalid fields, action is invalid in and of itself
+      - see here about handling deserialization errors: https://stackoverflow.com/questions/42666756/handling-bad-messages-using-kafkas-streams-api
     - invalid: not applicable to the current state
     - noop: would not modify the current state
     - ok: will be applied to the current state
@@ -45,3 +46,7 @@
     - entity retraction: lookup
   - after resolve, assertion and accretion are the same
   - resolving might not succeed because the lookup might not succeed: the action is invalid
+- about ids
+  - frontend should be able to create then delete entities without waiting the backend to respond with the id of created entity
+  - frontend could decide on id, but what about process-controlled ids?
+  - frontend decides on temporary id, backend decides would to do with it (use it in entity or not), but should be able to process incoming actions that use it, it should also check that it is unique
