@@ -50,3 +50,10 @@
   - frontend should be able to create then delete entities without waiting the backend to respond with the id of created entity
   - frontend could decide on id, but what about process-controlled ids?
   - frontend decides on temporary id, backend decides would to do with it (use it in entity or not), but should be able to process incoming actions that use it, it should also check that it is unique
+- about consistency
+  - when receiving action, need data views to take decision and emit facts
+    - eg CLEAR_COMPLETED needs to know what todos are completed
+  - how to know that the views have been fully updated, since they are eventually consistent and built downstream from the action processor
+    - maybe views need to emit actions/transactions/facts that they have received, then action processor can join the incoming action with those pings to wait
+    - optimization: impacted views depend on action type and can be known in when the action is processed
+      - eg no need for a CLEAR_COMPLETED to wait on an EDIT_TODO, but need to wait on a COMPLETE_TODO
