@@ -98,6 +98,11 @@ public class Transactor extends AbstractProcessor<String, Action> implements Act
     }
 
     @Override
+    public void process(String key, ClearCompleted action) {
+        
+    }
+
+    @Override
     public void process(String key, Action action) {
         action.accept(key, this);
     }

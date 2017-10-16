@@ -8,4 +8,6 @@ public interface ActionProcessor<K> {
     void process(K key, DeleteTodo action);
 
     void process(K key, CompleteAll action);
+
+    void process(K key, ClearCompleted action);
 }
