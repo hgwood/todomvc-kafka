@@ -55,5 +55,7 @@
     - eg CLEAR_COMPLETED needs to know what todos are completed
   - how to know that the views have been fully updated, since they are eventually consistent and built downstream from the action processor
     - maybe views need to emit actions/transactions/facts that they have received, then action processor can join the incoming action with those pings to wait
-    - optimization: impacted views depend on action type and can be known in when the action is processed
-      - eg no need for a CLEAR_COMPLETED to wait on an EDIT_TODO, but need to wait on a COMPLETE_TODO
+      - optimization: impacted views depend on action type and can be known in when the action is processed
+        - eg no need for a CLEAR_COMPLETED to wait on an EDIT_TODO, but need to wait on a COMPLETE_TODO
+    - or view builders could be chained in series
+      - a processor that reads a view v is always downstream from all processors that write v
