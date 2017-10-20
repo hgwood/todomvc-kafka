@@ -44,12 +44,12 @@ public class Transactor2 implements Topology {
         KStream<View, String> unlockings = effectiveLockers
             .filter((view, locker) -> locker == null);
 
-        actions.flatMap((actionKey, action) -> getReadViews(action).map(view -> KeyValue.pair(
+        /*actions.flatMap((actionKey, action) -> getReadViews(action).map(view -> KeyValue.pair(
             view,
             actionKey
         ))).join(unlockings, (currentAction, lockingAction) -> {
 
-        });
+        });*/
     }
 
     private Set<View> getWrittenViews(Action action) {

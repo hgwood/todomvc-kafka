@@ -84,6 +84,7 @@ public class Transactor extends AbstractProcessor<String, Action> implements Act
     public void process(String key, CompleteAll action) {
         Set<String> knownEntitiesSnapshot = HashSet.empty();
         this.knownEntities.all().forEachRemaining(kv -> {
+            // this will not work because it returns the new value
             knownEntitiesSnapshot.add(kv.key);
         });
         this
@@ -99,7 +100,7 @@ public class Transactor extends AbstractProcessor<String, Action> implements Act
 
     @Override
     public void process(String key, ClearCompleted action) {
-        
+
     }
 
     @Override
