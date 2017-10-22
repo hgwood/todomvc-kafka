@@ -6,6 +6,7 @@ import fr.hgwood.todomvckafka2.facts.EntityRetraction;
 import fr.hgwood.todomvckafka2.facts.Transaction;
 import fr.hgwood.todomvckafka2.schema.Attribute;
 import io.vavr.collection.HashSet;
+import io.vavr.collection.Iterator;
 import io.vavr.collection.Set;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.streams.processor.AbstractProcessor;
@@ -82,24 +83,19 @@ public class Transactor extends AbstractProcessor<String, Action> implements Act
 
     @Override
     public void process(String key, CompleteAll action) {
-        Set<String> knownEntitiesSnapshot = HashSet.empty();
-        this.knownEntities.all().forEachRemaining(kv -> {
-            knownEntitiesSnapshot.add(kv.key);
-        });
-        this
-            .context()
-            .forward(
-                randomKey(),
-                new Transaction(knownEntitiesSnapshot.map(entity -> new Assertion<>(entity,
-                    Attribute.TODO_ITEM_COMPLETED,
-                    true
-                )))
-            );
+        Set<String> knownEntitiesSnapshot =
+            Iterator.ofAll(this.knownEntities.all()).map(kv -> kv.key).toSet();
+        Transaction transaction =
+            new Transaction(knownEntitiesSnapshot.map(entity -> new Assertion<>(entity,
+                Attribute.TODO_ITEM_COMPLETED,
+                true
+            )));
+        this.context().forward(randomKey(), transaction);
     }
 
     @Override
     public void process(String key, ClearCompleted action) {
-        
+
     }
 
     @Override
